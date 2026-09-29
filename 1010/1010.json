@@ -1,7 +1,7 @@
 {
   "author": "1010",
-  "version": "1.0.0.0",
-  "description": "Vermilion 赤魔 ACR。作者1010。版本：1.0.0.0。",
+  "version": "1.0.0.1",
+  "description": "Vermilion 赤魔 ACR。作者1010。版本：1.0.0.1。修复了转场后互相等待导致的停手问题。",
   "supportedJobs": [
     {
       "job": "RDM",
@@ -10,6 +10,6 @@
   ],
   "apiVersion": 15,
   "referencePromeVersion": "1.5.10.4",
-  "downloadUrl": "https://raw.githubusercontent.com/ekko777sad-tech/1010/main/1010/1010.zip",
-  "sha256": "c3de18394cb6dfebb4e690d486b7584c110bf9517a2ced576f2e90cf520d219b"
+  "downloadUrl": "https://raw.githubusercontent.com/SAD777A/1010/main/1010/1010.zip",
+  "sha256": "78d302c1307c7bbae9fff31c95abfc03573230b2f95ec9b6aa4f861b9743c4dd"
 }
