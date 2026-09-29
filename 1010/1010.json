@@ -1,7 +1,7 @@
 {
   "author": "1010",
   "version": "1.0.0.0",
-  "description": "Vermilion 赤魔 ACR。作者1010。1.0.0.0：鼓励转好优先使用，允许短暂卡GCD；动态安排即刻/促进，尽量争取3+6。更新日随/高难默认QT，保留四人本离位剑连保护。已通过离线构建与回归检查，实机效果待验收。",
+  "description": "Vermilion 赤魔 ACR。作者1010。版本：1.0.0.0。",
   "supportedJobs": [
     {
       "job": "RDM",
