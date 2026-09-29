@@ -1,7 +1,7 @@
 {
   "author": "1010",
-  "version": "1.0.0.1",
-  "description": "Vermilion 赤魔 ACR。作者1010。版本：1.0.0.1。修复了转场后互相等待导致的停手问题。",
+  "version": "1.0.0.2",
+  "description": "Vermilion 赤魔 ACR。作者1010。版本：1.0.0.2。\n1. 死亡自动停手并关闭目标选择器。\n2. 复活后仍停手，需右键收起状态条手动解除。\n3. 存活进战恢复选敌；无历史模式时默认血量最高。\n4. 同时修复下一波接战、日随魔元化对齐鼓励。",
   "supportedJobs": [
     {
       "job": "RDM",
@@ -11,5 +11,5 @@
   "apiVersion": 15,
   "referencePromeVersion": "1.5.10.4",
   "downloadUrl": "https://raw.githubusercontent.com/SAD777A/1010/main/1010/1010.zip",
-  "sha256": "78d302c1307c7bbae9fff31c95abfc03573230b2f95ec9b6aa4f861b9743c4dd"
+  "sha256": "711c6e36e8ec65f3303a491edba7ec9600c68357b487760b91ccb1472510e446"
 }
