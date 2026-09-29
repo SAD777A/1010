@@ -1,0 +1,15 @@
+{
+  "author": "1010",
+  "version": "0.5.45.0",
+  "description": "Vermilion 赤魔 ACR。支持高难与日随、智能 AOE、爆发前瞻及中文 QT/热键。0.5.45 修复 AOE 选敌、促进与鼓励规划，保留四人本离位剑连保护。已通过离线验证，实机验证待完成。",
+  "supportedJobs": [
+    {
+      "job": "RDM",
+      "contentScope": "Unspecified"
+    }
+  ],
+  "apiVersion": 15,
+  "referencePromeVersion": "1.5.10.4",
+  "downloadUrl": "https://raw.githubusercontent.com/ekko777sad-tech/1010/main/1010/1010.zip",
+  "sha256": "6f3024648bb2adf38f8d3931d32ca37cbe4619c284774d6eec87233706a801f6"
+}
