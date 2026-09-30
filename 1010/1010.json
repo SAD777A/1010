@@ -1,7 +1,7 @@
 {
   "author": "1010",
-  "version": "1.0.0.8",
-  "description": "Vermilion 赤魔 ACR。作者1010。版本：1.0.0.8。\n1. 读条提醒改为游戏原生蓝色横幅，支持提示音；预测变化及时更新，开始读条后撤下。\n2. QT、热键和收起状态条默认固定，开启“调整布局”后可移动和排序。\n3. 动态选择免费或付费剑先手，优先评估爆发覆盖与资源溢出。\n4. 整合诊断、配置、生命周期与执行可靠性改进。",
+  "version": "1.0.0.9",
+  "description": "Vermilion 赤魔 ACR。作者1010。版本：1.0.0.9。\n1. 修复手动LB派发，改善带资源预读、倒计时结束和队友接战衔接。\n2. 优化读条横幅刷新与瞬发误报；暂停时可测试提醒。\n3. 默认QT与临时操作分离，通关或离开副本后恢复默认。\n4. 面板支持直接拖动，按钮顺序在设置中调整；暂停及脱战关闭选敌器。",
   "supportedJobs": [
     {
       "job": "RDM",
@@ -11,5 +11,5 @@
   "apiVersion": 15,
   "referencePromeVersion": "1.5.10.4",
   "downloadUrl": "https://raw.githubusercontent.com/SAD777A/1010/main/1010/1010.zip",
-  "sha256": "5333981f658f66815de3ba15f119854810d3a5cfcd314cacb34f9852028d26fd"
+  "sha256": "70df2b507fc11440324bc55abc37bc8842afc33b4f006a7a69c1a0357eff9470"
 }
