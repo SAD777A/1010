@@ -1,7 +1,7 @@
 {
   "author": "1010",
-  "version": "1.0.0.9",
-  "description": "Vermilion 赤魔 ACR。作者1010。版本：1.0.0.9。\n1. 修复手动LB派发，改善带资源预读、倒计时结束和队友接战衔接。\n2. 优化读条横幅刷新与瞬发误报；暂停时可测试提醒。\n3. 默认QT与临时操作分离，通关或离开副本后恢复默认。\n4. 面板支持直接拖动，按钮顺序在设置中调整；暂停及脱战关闭选敌器。",
+  "version": "1.0.0.10",
+  "description": "Vermilion 赤魔 ACR。作者1010。版本：1.0.0.10。\n1. 设置顶部总控与分页固定，内容在窗口内部滚动，各页保留滚动位置。\n2. 合法火炎/飞石触发优先于激荡，保留过期、失衡等情况下的兜底。\n3. 同等覆盖与时序下减少促进满层浪费，不额外等待或延后鼓励。",
   "supportedJobs": [
     {
       "job": "RDM",
@@ -11,5 +11,5 @@
   "apiVersion": 15,
   "referencePromeVersion": "1.5.10.4",
   "downloadUrl": "https://raw.githubusercontent.com/SAD777A/1010/main/1010/1010.zip",
-  "sha256": "70df2b507fc11440324bc55abc37bc8842afc33b4f006a7a69c1a0357eff9470"
+  "sha256": "09e1122265f70859bac2bec281656ee1c54f944e7d0de84494e7eca9cab904ff"
 }
