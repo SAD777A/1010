@@ -1,7 +1,7 @@
 {
   "author": "1010",
-  "version": "1.0.0.10",
-  "description": "Vermilion 赤魔 ACR。作者1010。版本：1.0.0.10。\n1. 设置顶部总控与分页固定，内容在窗口内部滚动，各页保留滚动位置。\n2. 合法火炎/飞石触发优先于激荡，保留过期、失衡等情况下的兜底。\n3. 同等覆盖与时序下减少促进满层浪费，不额外等待或延后鼓励。",
+  "version": "1.0.0.11",
+  "description": "Vermilion 赤魔 ACR。作者1010。版本：1.0.0.11。\n1. 修复部分转场、下一波接战及开场状态残留导致的执行等待。\n2. 优化剑连前瞬发与触发保留，促进选色避免覆盖可用触发。\n3. 出手前重新检查瞬发状态，过期候选及时重排；明确未尝试的结束指令释放等待。\n4. 精简正式包中的离线诊断代码，保留实际记录与导出能力。",
   "supportedJobs": [
     {
       "job": "RDM",
@@ -11,5 +11,5 @@
   "apiVersion": 15,
   "referencePromeVersion": "1.5.10.4",
   "downloadUrl": "https://raw.githubusercontent.com/SAD777A/1010/main/1010/1010.zip",
-  "sha256": "09e1122265f70859bac2bec281656ee1c54f944e7d0de84494e7eca9cab904ff"
+  "sha256": "1a496df0e87e733adc74f95d91d070e2ca634e487b85d0ae9402ff5c8d893702"
 }
