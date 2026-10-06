@@ -13,7 +13,6 @@ https://raw.githubusercontent.com/SAD777A/1010/main/pluginmaster.json
 ```
 
 搜索“本地改名 LocalName”并安装，输入 `/localname` 打开设置。
-从开发插件版本迁移时，先停用旧 LocalName 及旧路径的自动加载。国服、国际服使用同一个安装包，各自保留设置。
 
 [直接下载安装包](https://raw.githubusercontent.com/SAD777A/1010/main/LocalName/LocalName.zip)
 
@@ -42,5 +41,3 @@ Dalamud API 15；开发测试中。
 | 国服 | 26-10-05-02 | 7.56.2.9442 |
 
 安装包按宿主依赖版本选择对应模块。游戏或 Dalamud 更新后可能需要更新插件。
-
-头顶称号更新阶段参考 [Honorific](https://github.com/Caraxi/Honorific) 的处理思路独立实现，不依赖安装 Honorific。
