@@ -1,0 +1,21 @@
+[ {
+  "Author": "1010",
+  "Name": "本地改名 LocalName",
+  "InternalName": "LocalName",
+  "AssemblyVersion": "0.2.7.0",
+  "Changelog": "首次上传双服统一包；包含本地名字、区服、称号及后缀显示替换和头顶特效。已通过离线构建及兼容检查，游戏内效果仍待进一步测试。",
+  "Description": "一个修改本地名字等显示的小玩具，并添加了一些特效",
+  "Punchline": "一个修改本地名字等显示的小玩具，并添加了一些特效",
+  "ApplicableVersion": "any",
+  "DalamudApiLevel": 15,
+  "LoadPriority": 0,
+  "Tags": [
+    "name",
+    "ui"
+  ],
+  "CanUnloadAsync": false,
+  "RepoUrl": "https://github.com/SAD777A/1010/tree/main/LocalName",
+  "DownloadLinkInstall": "https://raw.githubusercontent.com/SAD777A/1010/main/LocalName/LocalName.zip",
+  "DownloadLinkUpdate": "https://raw.githubusercontent.com/SAD777A/1010/main/LocalName/LocalName.zip",
+  "DownloadLinkTesting": "https://raw.githubusercontent.com/SAD777A/1010/main/LocalName/LocalName.zip"
+} ]
