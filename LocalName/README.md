@@ -12,8 +12,6 @@
 https://raw.githubusercontent.com/SAD777A/1010/main/pluginmaster.json
 ```
 
-也可下载 [安装包](https://raw.githubusercontent.com/SAD777A/1010/main/LocalName/LocalName.zip) 解压，将 `LocalName.dll` 加入开发插件列表。切换安装方式前停用旧版，避免同时加载两份。
-
 ## 能做什么
 
 - **文字替换**：修改自己的本地名字、区服、称号和部队后缀；覆盖头顶、聊天、部分游戏界面、冒险者铭牌，以及已识别的宠物、召唤物和雇员主人标签。只影响本机显示，其他玩家看到的资料不变。
