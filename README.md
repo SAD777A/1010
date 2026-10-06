@@ -2,6 +2,10 @@
 
 作者：**1010**。
 
+```text
+https://raw.githubusercontent.com/SAD777A/1010/main/pluginmaster.json
+```
+
 Package metadata：[1010/1010.json](https://raw.githubusercontent.com/SAD777A/1010/main/1010/1010.json)
 
 
