@@ -1,7 +1,7 @@
 {
   "author": "1010",
-  "version": "1.0.0.11",
-  "description": "Vermilion 赤魔 ACR。作者1010。版本：1.0.0.11。\n1. 修复部分转场、下一波接战及开场状态残留导致的执行等待。\n2. 优化剑连前瞬发与触发保留，促进选色避免覆盖可用触发。\n3. 出手前重新检查瞬发状态，过期候选及时重排；明确未尝试的结束指令释放等待。\n4. 精简正式包中的离线诊断代码，保留实际记录与导出能力。",
+  "version": "1.0.0.12",
+  "description": "Vermilion 赤魔 ACR。作者1010。版本：1.0.0.12。\n1. 设置界面更新为炭黑、银灰与暗红主题，新增品牌栏、分段运行状态按钮和拨钮。\n2. 常用设置与默认QT随窗口宽度切换单列/双列，保留固定顶部和内部滚动。\n3. QT、热键及收起状态条增加边框、晶体角标与按压反馈，保留原尺寸、位置、排序和操作方式。",
   "supportedJobs": [
     {
       "job": "RDM",
@@ -11,5 +11,5 @@
   "apiVersion": 15,
   "referencePromeVersion": "1.5.10.4",
   "downloadUrl": "https://raw.githubusercontent.com/SAD777A/1010/main/1010/1010.zip",
-  "sha256": "1a496df0e87e733adc74f95d91d070e2ca634e487b85d0ae9402ff5c8d893702"
+  "sha256": "dff8c6a9157e44b345bd1f22d5438bb9d80b30d2cd24fdd71b84dc034f2eb66b"
 }
