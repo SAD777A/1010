@@ -14,8 +14,6 @@ https://raw.githubusercontent.com/SAD777A/1010/main/pluginmaster.json
 
 搜索“本地改名 LocalName”并安装，输入 `/localname` 打开设置。
 
-[直接下载安装包](https://raw.githubusercontent.com/SAD777A/1010/main/LocalName/LocalName.zip)
-
 ## 功能
 
 - 修改自己的本地名字、区服、称号和部队后缀显示，其他玩家看到的资料不变。
