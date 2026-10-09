@@ -8,6 +8,10 @@
 https://raw.githubusercontent.com/SAD777A/1010/main/pluginmaster.json
 ```
 
+## 源码
+
+源码已转为私有维护。本仓库保留公开安装包、更新清单与使用说明，安装和更新地址保持不变。
+
 ## 更新日志
 
 ### 0.2.40.0
