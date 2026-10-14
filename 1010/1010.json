@@ -1,7 +1,7 @@
 {
   "author": "1010",
-  "version": "1.0.0.13",
-  "description": "Vermilion 赤魔 ACR。作者1010。版本：1.0.0.13。\n1. 优化无倒数起手：首发照常，第2～3个GCD的合法窗口开鼓励，魔元化随后；关闭爆发仍按各自开关使用飞刺、反击、促进。\n2. 修复连续拉人确认等待，转场恢复保留拉人瞬发，优化临期免费AOE剑。\n3. 修复等级同步及仅建议/自动模式切换后的旧命令、等待残留，完善执行链检查。\n4. 热键CD倒数加大描边、层数独立显示，有可用层数时保持明亮，耗尽才压暗。",
+  "version": "1.0.0.14",
+  "description": "Vermilion 赤魔 ACR。作者1010。版本：1.0.0.14。\n1. 移除 ACR 对 PR 目标选择器的全部干预及持续自动补选，仅保留倒计时开始时一次选敌。\n2. 保留死亡自动停手，复活后需右键收起状态条手动解除。\n3. 精修热键 CD 倒数描边、阴影、三位数字及层数角标，有可用层数时仍保持明亮。",
   "supportedJobs": [
     {
       "job": "RDM",
@@ -11,5 +11,5 @@
   "apiVersion": 15,
   "referencePromeVersion": "1.5.10.4",
   "downloadUrl": "https://raw.githubusercontent.com/SAD777A/1010/main/1010/1010.zip",
-  "sha256": "5b03593ce7475bb9508d4ea9da42f1a295f9a129383c8032fe64f836ac9ebd8e"
+  "sha256": "19d41715a4efcab157e07648c49a17447266ba31ffabc04a697f1cf5d493fced"
 }
