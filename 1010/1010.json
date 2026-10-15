@@ -1,7 +1,7 @@
 {
   "author": "1010",
-  "version": "1.0.0.15",
-  "description": "Vermilion 赤魔 ACR。作者1010。版本：1.0.0.15。\n1. 修复关闭爆发 QT 后普通法术、反击/飞刺与促进被执行守卫误拒绝的问题，仍遵循各自开关。\n2. 修复低等级促进满层后持续延后问题：已完成连段后，在真实插入窗口内优先消耗促进；窗口不足或准备失败时继续正常 GCD。\n3. 保留已有爆发、起手、触发时限及魔元溢出保护。",
+  "version": "1.0.0.16",
+  "description": "Vermilion 赤魔 ACR。作者 1010。版本：1.0.0.16。\n1. 日随小怪收尾保留爆发、换波释放；正常输出持续，保留有超时兜底。\n2. 两种模式加入受限的单次补选目标，改善队友开怪后的接战；尊重手动目标及停手。\n3. 修复无倒数接战准备技能的派发路径，未提交准备超时后允许普通法术接战。\n4. 修复剑形态切换期间剑三过早排队的问题。",
   "supportedJobs": [
     {
       "job": "RDM",
@@ -11,5 +11,5 @@
   "apiVersion": 15,
   "referencePromeVersion": "1.5.10.4",
   "downloadUrl": "https://raw.githubusercontent.com/SAD777A/1010/main/1010/1010.zip",
-  "sha256": "12a51b1099aac9ce11decf2fa241335916988aafaf02bbda021d7b457f8705cc"
+  "sha256": "53d471b81b5a5ccefb778f1b7e0a8712f1a04a65dea6c462cce55885eef00661"
 }
