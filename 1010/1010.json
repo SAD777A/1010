@@ -1,7 +1,7 @@
 {
   "author": "1010",
-  "version": "1.0.0.16",
-  "description": "Vermilion 赤魔 ACR。作者 1010。版本：1.0.0.16。\n1. 日随小怪收尾保留爆发、换波释放；正常输出持续，保留有超时兜底。\n2. 两种模式加入受限的单次补选目标，改善队友开怪后的接战；尊重手动目标及停手。\n3. 修复无倒数接战准备技能的派发路径，未提交准备超时后允许普通法术接战。\n4. 修复剑形态切换期间剑三过早排队的问题。",
+  "version": "1.0.0.17",
+  "description": "Vermilion 赤魔 ACR。作者1010。版本：1.0.0.17。\n1. 优化队友开怪后的安全单体接战，短暂丢失交战信息时保持衔接。\n2. 加强手动清目标保护，修复短暂漏采导致的换波误判。\n3. 热键改为小倒数、柔化原生恢复环和原生层数标记；有可用层数时保持明亮。",
   "supportedJobs": [
     {
       "job": "RDM",
@@ -11,5 +11,5 @@
   "apiVersion": 15,
   "referencePromeVersion": "1.5.10.4",
   "downloadUrl": "https://raw.githubusercontent.com/SAD777A/1010/main/1010/1010.zip",
-  "sha256": "53d471b81b5a5ccefb778f1b7e0a8712f1a04a65dea6c462cce55885eef00661"
+  "sha256": "e667b3651b23cda4f2d6f3642674b98204b61e07ba4f2f4239ff01613e589c33"
 }
