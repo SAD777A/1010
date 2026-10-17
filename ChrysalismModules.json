@@ -6,9 +6,9 @@
       "Name": "本地改名 LocalName",
       "Author": "1010",
       "Description": "本地姓名、区服、称号、部队显示及头顶特效。启用前请停用独立版 LocalName，并关闭 Chrysalism 自定义名称。",
-      "Version": "0.2.44.11",
+      "Version": "0.2.44.12",
       "File": "Modules/LocalName.cs",
-      "Sha256": "98484C105024DD6D5B9C2C0A60DAF6BE9DE1B613ABBE596CC2182BC10A092EF8",
+      "Sha256": "423C2EB2B85010BEAADB9FDB7E6FB3628B74AAEA10B864238627824A932E4A8A",
       "Category": "界面"
     }
   ]
