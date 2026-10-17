@@ -1,7 +1,7 @@
 {
   "author": "1010",
-  "version": "1.0.0.17",
-  "description": "Vermilion 赤魔 ACR。作者1010。版本：1.0.0.17。\n1. 优化队友开怪后的安全单体接战，短暂丢失交战信息时保持衔接。\n2. 加强手动清目标保护，修复短暂漏采导致的换波误判。\n3. 热键改为小倒数、柔化原生恢复环和原生层数标记；有可用层数时保持明亮。",
+  "version": "1.0.0.18",
+  "description": "Vermilion 赤魔 ACR。作者 1010。版本：1.0.0.18。\n1. 敌对输出按具体技能原生射程判断，修复距离估算导致的接战、选技和恢复停顿。\n2. 保留手动清目标保护，不因敌人重新进入射程而抢回目标。\n3. 近战突进改为贴身突进，自动短兵仅在碰撞圈边缘间距不超过 1 米时使用，执行前再次校验；手动短兵保留原生射程。",
   "supportedJobs": [
     {
       "job": "RDM",
@@ -11,5 +11,5 @@
   "apiVersion": 15,
   "referencePromeVersion": "1.5.10.4",
   "downloadUrl": "https://raw.githubusercontent.com/SAD777A/1010/main/1010/1010.zip",
-  "sha256": "e667b3651b23cda4f2d6f3642674b98204b61e07ba4f2f4239ff01613e589c33"
+  "sha256": "acb6debe31fcff73c3426e5a3be9761b073e96ba03adc2a0448d359fd1dceac9"
 }
