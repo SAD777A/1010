@@ -1,6 +1,6 @@
 {
   "author": "1010",
-  "version": "1.0.0.19",
+  "version": "1.0.1.0",
   "description": "",
   "supportedJobs": [
     {
@@ -11,5 +11,5 @@
   "apiVersion": 15,
   "referencePromeVersion": "1.5.10.4",
   "downloadUrl": "https://raw.githubusercontent.com/SAD777A/1010/main/1010/1010.zip",
-  "sha256": "21890029e9815fbb631df1856e194839e93af64f8518c3ef3a4ee0fcb78bddda"
+  "sha256": "2f94d2feeee6710ef15f38c9466932249939d5b18eaa2c13e1b0b8855d0f31a4"
 }
