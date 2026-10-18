@@ -1,7 +1,7 @@
 {
   "author": "1010",
-  "version": "1.0.0.18",
-  "description": "Vermilion 赤魔 ACR。作者 1010。版本：1.0.0.18。\n1. 敌对输出按具体技能原生射程判断，修复距离估算导致的接战、选技和恢复停顿。\n2. 保留手动清目标保护，不因敌人重新进入射程而抢回目标。\n3. 近战突进改为贴身突进，自动短兵仅在碰撞圈边缘间距不超过 1 米时使用，执行前再次校验；手动短兵保留原生射程。",
+  "version": "1.0.0.19",
+  "description": "",
   "supportedJobs": [
     {
       "job": "RDM",
@@ -11,5 +11,5 @@
   "apiVersion": 15,
   "referencePromeVersion": "1.5.10.4",
   "downloadUrl": "https://raw.githubusercontent.com/SAD777A/1010/main/1010/1010.zip",
-  "sha256": "acb6debe31fcff73c3426e5a3be9761b073e96ba03adc2a0448d359fd1dceac9"
+  "sha256": "21890029e9815fbb631df1856e194839e93af64f8518c3ef3a4ee0fcb78bddda"
 }
