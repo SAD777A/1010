@@ -1,15 +1,19 @@
 {
   "author": "1010",
-  "version": "1.0.1.1",
+  "version": "1.0.1.2",
   "description": "",
   "supportedJobs": [
     {
       "job": "RDM",
+      "contentScope": "Unspecified"
+    },
+    {
+      "job": "VPR",
       "contentScope": "Unspecified"
     }
   ],
   "apiVersion": 15,
   "referencePromeVersion": "1.5.10.4",
   "downloadUrl": "https://raw.githubusercontent.com/SAD777A/1010/main/1010/1010.zip",
-  "sha256": "1e1874d514ce86ea96ab983f473041189f0d07f33ff4ff902f3d7dd0a3b9d24f"
+  "sha256": "4942ebf4e2a7974b842260d9ba2d092f0654c117d74d1077903ff70119543a4c"
 }
