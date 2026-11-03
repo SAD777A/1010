@@ -19,5 +19,26 @@
     "DownloadLinkInstall": "https://raw.githubusercontent.com/SAD777A/1010/main/LocalName/LocalName.zip",
     "DownloadLinkUpdate": "https://raw.githubusercontent.com/SAD777A/1010/main/LocalName/LocalName.zip",
     "DownloadLinkTesting": "https://raw.githubusercontent.com/SAD777A/1010/main/LocalName/LocalName.zip"
+  },
+  {
+    "Author": "1010",
+    "Name": "本地改名 LocalName（API16）",
+    "InternalName": "LocalNameAPI16",
+    "AssemblyVersion": "0.2.45.0",
+    "Changelog": "API 16 独立版：与 API 15 的 LocalName 分开安装，功能与 0.2.45.0 相同；首次启动自动导入 LocalName 的设置和本地图片，之后独立保存。适配 API 16 删除旧 SeString、表格与名牌接口等变化，未在游戏内全面验证。",
+    "Description": "一个修改本地名字等显示的小玩具，并添加了一些特效。仅支持卫月 API 16（国际服测试分支）；API 15 请安装“本地改名 LocalName”。",
+    "Punchline": "仅支持卫月 API 16 的 LocalName 独立版。",
+    "ApplicableVersion": "any",
+    "DalamudApiLevel": 16,
+    "LoadPriority": 0,
+    "Tags": [
+      "name",
+      "ui"
+    ],
+    "CanUnloadAsync": false,
+    "RepoUrl": "https://github.com/SAD777A/1010/tree/main/LocalNameAPI16",
+    "DownloadLinkInstall": "https://raw.githubusercontent.com/SAD777A/1010/main/LocalNameAPI16/LocalNameAPI16.zip",
+    "DownloadLinkUpdate": "https://raw.githubusercontent.com/SAD777A/1010/main/LocalNameAPI16/LocalNameAPI16.zip",
+    "DownloadLinkTesting": "https://raw.githubusercontent.com/SAD777A/1010/main/LocalNameAPI16/LocalNameAPI16.zip"
   }
 ]
