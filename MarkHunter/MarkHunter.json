@@ -1,0 +1,21 @@
+{
+  "Author": "1010",
+  "Name": "B怪猎手 MarkHunter",
+  "InternalName": "MarkHunter",
+  "AssemblyVersion": "0.2.0.0",
+  "Changelog": "首个公开版本。刷数量 / 刷种类两种模式，种类模式支持新生、苍穹、红莲 8 个地区成就；沿刷新点飞行巡逻，发现 B 级怪后落地开怪。仅国服构建。",
+  "Description": "自动刷 B 级恶名精英：刷数量（在一张图循环刷，攒击杀数成就）或刷种类（按地区轮换地图，完成讨伐 N 种 B 级的成就）。沿刷新点飞行巡逻，发现后落地开怪，输出交给战斗循环插件。依赖 vnavmesh。仅支持国服。",
+  "Punchline": "自动刷 B 级恶名精英（国服）",
+  "ApplicableVersion": "any",
+  "DalamudApiLevel": 15,
+  "LoadPriority": 0,
+  "Tags": [
+    "hunt",
+    "automation"
+  ],
+  "CanUnloadAsync": true,
+  "RepoUrl": "https://github.com/SAD777A/1010/tree/main/MarkHunter",
+  "DownloadLinkInstall": "https://raw.githubusercontent.com/SAD777A/1010/main/MarkHunter/MarkHunter.zip",
+  "DownloadLinkUpdate": "https://raw.githubusercontent.com/SAD777A/1010/main/MarkHunter/MarkHunter.zip",
+  "DownloadLinkTesting": "https://raw.githubusercontent.com/SAD777A/1010/main/MarkHunter/MarkHunter.zip"
+}
