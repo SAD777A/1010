@@ -1,6 +1,6 @@
 # HuntSpawner
 
-S怪自动触发插件，**仍在测试中**，目前仅国服。大部分触发流程还没有完整实测，使用时请留意，遇到问题欢迎反馈。
+S怪自动触发插件，**仍在测试中**，支持国服和国际服（同一个安装包，启动时自动选择）。大部分触发流程还没有完整实测，使用时请留意，遇到问题欢迎反馈。
 
 ## 安装
 
@@ -36,7 +36,7 @@ https://raw.githubusercontent.com/SAD777A/1010/main/pluginmaster.json
 
 ## 依赖
 
-- vnavmesh（国服版）：寻路。
+- vnavmesh：寻路（国服用国服版）。
 - Lifestream：换线。
 - 战斗循环插件（如 PromeRotation）：排点、击杀计数时负责输出，本插件只找怪、靠近、选中和开怪。
 - 可选：MissFisher（钓鱼）、GatherBuddy Reborn（采集，要先在它的自动采集清单里放好道具）、Artisan（制作）、Sonar（联动）、YesAlready（运行时会暂停它）。
