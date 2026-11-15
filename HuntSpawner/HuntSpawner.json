@@ -2,7 +2,7 @@
   "Author": "1010",
   "Name": "S怪触发 HuntSpawner",
   "InternalName": "HuntSpawner",
-  "AssemblyVersion": "0.1.0.0",
+  "AssemblyVersion": "0.2.0.0",
   "Changelog": "双核心：同一个安装包同时支持国服和国际服，启动时按区服自动选择。修复钓鱼加鱼眼时 MissFisher 报命令参数有误；新增默认触发套装、结束后换回出发前的套装；手动触发时条件要等超过 30 分钟就不出发并提示满足时间；击杀计数预置小怪刷怪区域，FATE 怪会自动等级同步。仍在测试中。",
   "Description": "S怪自动触发插件，仍在测试中，目前仅国服",
   "Punchline": "S怪自动触发插件，仍在测试中，目前仅国服",

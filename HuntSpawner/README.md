@@ -65,7 +65,7 @@ https://raw.githubusercontent.com/SAD777A/1010/main/pluginmaster.json
 
 ## 更新日志
 
-### 0.1.0.0（2026-11-15 更新）
+### 0.2.0.0
 
 - 双核心：同一个安装包同时支持国服和国际服，启动时按区服自动选择。国际服刚开始测试。
 - 修复钓鱼加鱼眼时 MissFisher 报“命令参数有误”。
@@ -73,6 +73,6 @@ https://raw.githubusercontent.com/SAD777A/1010/main/pluginmaster.json
 - 手动触发时，时间、月相、天气条件要等超过 30 分钟就不出发，直接提示满足时间。
 - 击杀计数预置小怪刷怪区域，打 FATE 里的怪前自动等级同步。
 
-### 0.1.0.0（首次发布）
+### 0.1.0.0
 
 - 首个公开测试版（仅国服）。
