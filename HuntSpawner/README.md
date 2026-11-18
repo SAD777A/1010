@@ -4,7 +4,7 @@ S怪自动触发插件，**仍在测试中**，支持国服和国际服（同一
 
 ## 安装
 
-在 Dalamud 的自定义插件仓库中添加以下地址，搜索“S怪触发 HuntSpawner”安装；输入 `/huntspawner`（或 `/hsp`）打开窗口。
+在 Dalamud 的自定义插件仓库中添加以下地址，搜索“HuntSpawner”安装；输入 `/huntspawner`（或 `/hsp`）打开窗口。
 
 ```text
 https://raw.githubusercontent.com/SAD777A/1010/main/pluginmaster.json

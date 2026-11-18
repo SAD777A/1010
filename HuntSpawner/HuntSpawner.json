@@ -1,11 +1,11 @@
 {
   "Author": "1010",
-  "Name": "S怪触发 HuntSpawner",
+  "Name": "HuntSpawner",
   "InternalName": "HuntSpawner",
   "AssemblyVersion": "0.3.0.0",
   "Changelog": "采集改为插件自己完成（不再需要 GatherBuddy Reborn 和清单），自动换采矿工 / 园艺工并用恢复采集次数的技能；新增萨法特：记录起跳点后自动跳崖；设置页拆成分页；钓鱼补上演练；修复钓鱼加鱼眼报错等。仍在测试中。",
   "Description": "S怪自动触发插件，仍在测试中，支持国服和国际服",
-  "Punchline": "S怪自动触发插件，仍在测试中，支持国服和国际服",
+  "Punchline": "S怪触发",
   "ApplicableVersion": "any",
   "DalamudApiLevel": 15,
   "LoadPriority": 0,
