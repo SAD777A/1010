@@ -39,7 +39,7 @@ https://raw.githubusercontent.com/SAD777A/1010/main/pluginmaster.json
 
 - vnavmesh：寻路（国服用国服版）。
 - Lifestream：换线。
-- 战斗循环插件（如 PromeRotation）：排点、击杀计数时负责输出，本插件只找怪、靠近、选中和开怪。
+- 战斗循环插件：排点、击杀计数时负责输出，本插件只找怪、靠近、选中和开怪。装了 BossMod / BossMod Reborn 会自动识别并开关它的预设；其他循环插件（PromeRotation、RSR 等）在设置里填开始 / 关闭战斗指令。
 - 可选：MissFisher（钓鱼）、Artisan（制作）、Sonar（联动）、YesAlready（运行时会暂停它）。
 
 ## 用法
@@ -65,6 +65,12 @@ https://raw.githubusercontent.com/SAD777A/1010/main/pluginmaster.json
 源码不公开。本目录保留安装包、更新清单与使用说明。
 
 ## 更新日志
+
+### 0.4.0.0
+
+- 舍弃改为批量处理：一次拆出多份、一起舍弃，不再逐个弹确认框，盐和光这类要舍弃多次的明显加快。
+- 新增战斗循环控制（设置“排点与打怪”分页）：开始 / 关闭战斗指令；自动识别 BossMod / BossMod Reborn 并开关所选预设；倒地类拉怪前自动关闭，免得还手。
+- 盐和光的填充道具除了材料商的商品，也能选背包里能堆叠、能舍弃的道具（如矮人棉）。
 
 ### 0.3.0.0
 
