@@ -4,7 +4,7 @@
     "Name": "本地改名 LocalName",
     "InternalName": "LocalName",
     "AssemblyVersion": "0.3.0.0",
-    "TestingAssemblyVersion": "0.3.1.0",
+    "TestingAssemblyVersion": "0.3.2.0",
     "TestingDalamudApiLevel": 15,
     "Changelog": "新增颜色效果：心跳辉光、火焰、霓虹灯管、职业色（按当前职能显示坦克蓝、治疗绿、输出红）。设置窗口标题栏加入赞助小爱心，并修复标题栏下方的细缝。",
     "Description": "一个修改本地名字等显示的小玩具，并添加了一些特效",
