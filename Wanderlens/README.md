@@ -18,7 +18,11 @@ https://raw.githubusercontent.com/SAD777A/1010/main/pluginmaster.json
 - 本插件会改动客户端并拦截发往服务器的数据包，有掉线和账号处罚的风险，请自行承担。
 - 停用、更新或重载插件前，先用 `/wlens stop` 回到原地。
 - 启动时会从 GitHub 下载公开的数据包名称表。联机功能沿用上游，默认指向原作者的中继（需要其密钥），本修改版未做适配和测试。
-- 已知问题：随包的 MessagePack 2.5.302 有中危漏洞 [GHSA-qhrr-8q5h-9q3h](https://github.com/advisories/GHSA-qhrr-8q5h-9q3h)（2.5.303 修复），它用于解析联机数据。修复前请不要连接不信任的中继。
+
+## 更新记录
+
+- **1.1.1.0**（2026-11-22）：升级 MessagePack 到 2.5.303，修复 [GHSA-qhrr-8q5h-9q3h](https://github.com/advisories/GHSA-qhrr-8q5h-9q3h)。未在游戏内验证。
+- **1.1.0.5**（2026-11-22）：首个开发中构建。
 
 ## 源码与构建
 

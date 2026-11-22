@@ -7,6 +7,11 @@ Wanderlens 是修改版，基于 [Enceladeum/HMapSync](https://github.com/Encela
 - 保留 `Dalamud.NET.Sdk/15.0.0`，`Directory.Build.props` 把 `DALAMUD_HOME` 指向 `%APPDATA%\XIVLauncherCN\addon\Hooks\dev`，引用国服 Dalamud。
 - `dotnet build -c Release`，输出 `bin\Release\Wanderlens.dll`。
 
+## 依赖
+
+- MessagePack 固定为 2.5.303（修复 GHSA-qhrr-8q5h-9q3h）。该漏洞需要反序列化到 `object`；本插件现有 18 个协议类型未发现此类公开成员。
+- Wanderlens 1.1.1.0（2026-11-22）起随包 2.5.303；1.1.0.5 随包的是 2.5.302。
+
 ## 改名（2026-11-22）
 
 - HMapSync → Wanderlens 漫游镜：程序集 / InternalName 为 `Wanderlens`，命令 `/hms` → `/wlens`。

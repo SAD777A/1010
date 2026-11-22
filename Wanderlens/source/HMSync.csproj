@@ -3,7 +3,7 @@
         <TargetFramework>net10.0-windows</TargetFramework>
         <LangVersion>latest</LangVersion>
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-        <Version>1.1.0.5</Version>
+        <Version>1.1.1.0</Version>
         <!-- Renamed fork. RootNamespace stays HMSync to keep upstream merges and embedded resource names intact. -->
         <AssemblyName>Wanderlens</AssemblyName>
         <RootNamespace>HMSync</RootNamespace>
@@ -80,6 +80,6 @@
           Glamourer itself loaded. Every Glamourer/Penumbra consumer ships the shim this way.
         -->
         <PackageReference Include="Glamourer.Api" Version="2.*" />
-        <PackageReference Include="MessagePack" Version="2.5.*" /><!-- S331: v4 binary wire (Stage 4) -->
+        <PackageReference Include="MessagePack" Version="2.5.303" /><!-- S331: v4 binary wire (Stage 4) -->
     </ItemGroup>
 </Project>

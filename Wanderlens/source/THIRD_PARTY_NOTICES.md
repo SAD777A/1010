@@ -97,7 +97,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ````
 
-## MessagePack / MessagePack.Annotations 2.5.302（随包分发）
+## MessagePack / MessagePack.Annotations 2.5.303（随包分发）
 
 https://github.com/MessagePack-CSharp/MessagePack-CSharp
 

@@ -5,6 +5,14 @@ All notable changes to HMapSync (HMS) are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.1.0] - 2026-11-22 (Wanderlens fork, in development)
+
+Not an upstream HMapSync release. See CN-PORT.md for what the fork changes. Not yet verified in game.
+
+### Fixed
+
+- **MessagePack 2.5.303.** Fixes GHSA-qhrr-8q5h-9q3h in the bundled serializer.
+
 ## [1.1.0.5] - 2026-11-19
 
 ### Added
