@@ -1,0 +1,8 @@
+<Project>
+    <!-- 国服移植：让 Dalamud.NET.Sdk 引用国服 Dalamud / FFXIVClientStructs / Lumina 程序集。
+         Sdk.props 在 DALAMUD_HOME 非空时用它作为 DalamudLibPath，本文件早于该判断导入。
+         需要切回国际服时传 -p:DALAMUD_HOME=<国际服 Hooks\dev 路径>。 -->
+    <PropertyGroup>
+        <DALAMUD_HOME Condition="'$(DALAMUD_HOME)' == ''">$(APPDATA)\XIVLauncherCN\addon\Hooks\dev</DALAMUD_HOME>
+    </PropertyGroup>
+</Project>

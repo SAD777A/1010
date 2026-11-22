@@ -1,8 +1,35 @@
 # Wanderlens 漫游镜
 
-> **开发中，暂不提供下载。** 本目录目前只有说明，插件也还没有加入插件仓库列表，在 Dalamud 里搜索不到。
+> **开发中。** 当前构建只确认能编译，还没有在游戏内验证，可能无法加载、崩溃或导致掉线。仅支持国服。
 
 在本地加载游戏里的地图和过场场景，用来自由探索和拍照。目前面向国服客户端开发。
+
+## 安装
+
+在 Dalamud 的自定义插件仓库中添加以下地址，搜索“Wanderlens”安装，输入 `/wlens` 打开窗口。
+
+```text
+https://raw.githubusercontent.com/SAD777A/1010/main/pluginmaster.json
+```
+
+## 使用前须知
+
+- 先停用原版 HMapSync，两者不能同时启用。首次启动会复制原版的设置，原文件不动。
+- 本插件会改动客户端并拦截发往服务器的数据包，有掉线和账号处罚的风险，请自行承担。
+- 停用、更新或重载插件前，先用 `/wlens stop` 回到原地。
+- 启动时会从 GitHub 下载公开的数据包名称表。联机功能沿用上游，默认指向原作者的中继（需要其密钥），本修改版未做适配和测试。
+- 已知问题：随包的 MessagePack 2.5.302 有中危漏洞 [GHSA-qhrr-8q5h-9q3h](https://github.com/advisories/GHSA-qhrr-8q5h-9q3h)（2.5.303 修复），它用于解析联机数据。修复前请不要连接不信任的中继。
+
+## 源码与构建
+
+安装包对应的完整源码在 [source](source)，许可全文见 [LICENSE](LICENSE)，改动记录见 [CN-PORT.md](source/CN-PORT.md)，第三方声明见 [THIRD_PARTY_NOTICES.md](source/THIRD_PARTY_NOTICES.md)。
+
+需要 .NET 10 SDK 和国服 Dalamud 开发文件：
+
+```powershell
+cd source
+dotnet build HMSync.csproj -c Release
+```
 
 ## 开发内容
 
