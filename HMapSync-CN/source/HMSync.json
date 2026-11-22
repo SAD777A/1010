@@ -1,0 +1,10 @@
+{
+    "Name": "HMapSync-CN",
+    "Author": "Enceladeum (HMapSync), modified by 1010",
+    "AssemblyVersion": "1.1.1.0",
+    "Punchline": "【开发中】自由探索全游戏的地图与场景（国服）",
+    "Description": "【开发中，未经完整实测】HMapSync（作者 Enceladeum）的修改版：国服适配、场地机关与阶段、布局版本、中文场景名。仅支持国服，不能与原版 HMapSync 同时启用。AGPL-3.0，源码随包发布在同一仓库。",
+    "IconUrl": "https://raw.githubusercontent.com/Enceladeum/HMapSync/main/images/icon.png",
+    "RepoUrl": "https://github.com/SAD777A/1010/tree/main/HMapSync-CN",
+    "AcceptsFeedback": false
+}
