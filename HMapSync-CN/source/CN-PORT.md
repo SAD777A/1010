@@ -24,13 +24,14 @@
 
 | 功能 | 实现位置 | 说明 |
 | --- | --- | --- |
-| 场地机关 | `Services/MapEffectService.cs`、`ZoneLoadService.SetupInstanceContentForZone` | 只对 ContentLinkType==1、战斗类 IntendedUse 且有 ContentDirectorManagedSG 的副本创建 director；加载约 2 秒后自动套开场状态 |
+| 场地机关 | `Services/MapEffectService.cs`、`ZoneLoadService.SetupInstanceContentForZone` | 只对 ContentLinkType==1、战斗类 IntendedUse 且有 ContentDirectorManagedSG 的副本创建 director；加载约 2 秒后自动套开场状态（同图重载也会）：已录制的流程用录制值；其余依次取明确命名的默认态、SGB 自动播放态、状态 4，不按名字里的 off/hide 猜 |
 | 阶段预设 | `MapEffectService.FlowPresets` / `SgbFlowPresets`、`HMSyncConfig.MapPhasePresets` | 内置：光暗未来、欧米茄、妖星乱舞、巴哈、神兵、龙诗、亚历山大、M11/M11S；可自存机关 + 天气 + 节日 + 隐藏图层 |
+| 过场场景变体 | `MapEffectService.GetStageSceneKey`、`ZoneLoadService.CreateSceneDetour` | 替身加载匹配不到场景过滤表时游戏会叠加全部变体，改为选保留场景物体最多的一套；已有 `StageHideStates` 手调的场景保持原样 |
 | 区域跳转 | `MapEffectService.GetZoneAreas` | 读 planmap/planevent 的 `LVD_*` 图层（深层迷宫终点、Boss 区等） |
 | 环境天气 | `MapEffectService.GetZoneWeathers` | 解析 `.lvb` → `.envb` 的 ENVS 表，原生写入 |
-| 剧情进度 / 布局版本 | `MapEffectService.GetLayoutKeys`、插件 `LoadWithLayoutKey` | 原始解析 LGB 图层集键；同图时先经旅馆 177 再冷加载；名称按图层名推断（阶段 vN） |
+| 剧情进度 / 布局版本 | `MapEffectService.GetLayoutKeys`、插件 `LoadWithLayoutKey` | 原始解析 LGB 图层集键；同图时先经旅馆 177 再冷加载；名称按图层名推断（阶段 vN）；只列 `.lvb` 过滤表里存在的键；过场场景按自身地图列出 |
 | 节日装饰 | `MapEffectService.Get/SetFestivals`、`Services/FestivalNames.cs` | 名称表由 Hyperborea festivals.yaml 生成 |
-| 场景图层 | `MapEffectService.GetSceneLayers`、`ZoneLoadService.ApplyIdSet` | 显示路径补上 SharedGroup 子物体恢复；换图时释放本插件持有的隐藏 |
+| 场景图层 | `MapEffectService.GetSceneLayers`、`ZoneLoadService.ApplyIdSet` | 显示路径补上 SharedGroup 子物体恢复；每次加载清空全部逐帧隐藏；重新显示时恢复碰撞 |
 | 穿墙速度 | `NoclipService.SpeedMultiplier` | 1–6 倍；仅在已加载虚拟地图且封包拦截开启时生效。飞行、穿墙、地毯本身是上游功能 |
 | 中文场景名 | `scene-names.zh.json`、`Services/SceneNames.cs` | 209 个场景名、719 个任务名。两服客户端按 RowId 对照；场景名里 112 个是官方译名，69 个按官方术语手译，28 个由前两者派生。搜索中英文都可用，同步协议仍传英文名 |
 | 切歌延迟 | `MapSettingsService.PlayBgm` | 切歌前设自定义淡入淡出 100ms |
@@ -46,4 +47,8 @@
 - 已验证：国服加载地图；光暗未来通关花海；至福乐土（1073）布局版本切换。
 - 2026-11-22 离线核对：心跳、发包、交互、飞行四个特征码在国服 exe 中均唯一；/say 放行默认关闭，未在国服重新学习前不会放行该包。
 - 未验证：中文场景名显示、穿墙调速、布局切换的中途取消、欧米茄、妖星乱舞、M11S 流程，亚历山大分阶段图层隐藏，龙诗阶段天气，切歌淡入淡出，换图释放隐藏记录。
+- 2026-11-22 缺地板 / 叠模修复（随 1.1.2.0 发布，尚未在游戏内实测）：开场状态误关静止态场景（离线扫描 327 个槽位、73 个副本，修后为 0）；亚历山大分阶段图层隐藏此前未写入预设、从未生效；隐藏记录跨图残留；同图重载不重套开场状态；7 个过场场景叠加多套变体；布局下拉框在 204 张地图列出无效键。
+- 2026-11-25 Brio 家具修复（随 1.1.2.0 发布，国际服实测通过）：加载地图后的家具隐藏扫描会把所有 `bgcommon/hou/` 模型当成原地房屋漏出来的家具，Brio 在 GPose 里生成的家具道具因此一出现就被藏掉。现在 GPose 期间只维持进 GPose 前已藏的物体（`ZoneLoadService.deDrawnRoots`）。已知缺口：加载后约 1 秒内就进 GPose，原地家具可能露出。
+- 2026-11-25 国际服实机：同一构建在国际服（Dalamud 15.0.4.1）加载、全部钩子初始化、加载 1238、`/hms stop` 均正常；25 个特征码两服匹配数一致。
+- 仍未解决：龙诗等靠天气或服务器切换的多阶段场地可能叠加，缺少各阶段对应关系，不猜测，需进游戏取证。
 - 多人同步：官方中继需要封测密钥，计划自建中继，未实现。

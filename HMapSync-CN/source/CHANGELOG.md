@@ -5,6 +5,15 @@ All notable changes to HMapSync (HMS) are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.2.0] - 2026-11-25 (HMapSync-CN, in development)
+
+### Fixed
+
+- **Missing floors in duties.** Gimmicks that start without server data now rest at their default, autoplay or rest state (4) instead of a state picked by its name: names with "off" / "hide" switched off floors and stages in 73 duties.
+- **Overlapping scenery.** The Epic of Alexander hides the other phases' stacked arenas; seven cutscene stages load one layout variant instead of all of them; held hides no longer carry over into later maps; a reload of the same map re-applies the opening states; the layout version list only offers keys the level has.
+- **Brio furniture vanished in loaded maps.** The leaked-furniture de-draw no longer hides furniture models spawned while gposing (verified on the Global client).
+- Colliders come back when a hidden layer is shown again; the scene panel reads the stage itself in cutscene stages.
+
 ## [1.1.1.0] - 2026-11-22 (HMapSync-CN, in development)
 
 Not an upstream HMapSync release. See CN-PORT.md for what the fork changes. Not yet verified in game.

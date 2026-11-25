@@ -24,6 +24,7 @@ public sealed class MapEffectSlotInfo
     public bool DefaultOn;
     public string SgbPath = "";
     public (ushort State, string Name)[] States = [];
+    public ushort[] AutoPlayStates = [];   // states whose timeline the SGB itself plays on load
 
     public string SgbName => string.IsNullOrEmpty(SgbPath)
         ? $"#{LayoutId:X8}"
@@ -60,6 +61,15 @@ public sealed unsafe class MapEffectService
         this.data = data;
         this.log = log;
     }
+
+    /// <summary>The bg of the cutscene stage swapped in over this territory, or null for an ordinary map.</summary>
+    public Func<uint, string?>? StageBgOf;
+
+    // A swap stage runs under its donor's territory id, so anything read from the level must follow the stage's bg.
+    private string? SceneBg(uint territoryType) =>
+        StageBgOf?.Invoke(territoryType) ?? data.GetExcelSheet<TerritoryType>()?.GetRowOrDefault(territoryType)?.Bg.ToString();
+
+    private string SceneCacheKey(uint territoryType) => territoryType + "|" + StageBgOf?.Invoke(territoryType);
 
     /// <summary>True when an instance-content director exists, i.e. map effects can be applied right now.</summary>
     public bool DirectorReady
@@ -145,6 +155,7 @@ public sealed unsafe class MapEffectService
 
     public List<MapEffectSlotInfo> GetZoneSlots(uint territoryType)
     {
+        if (StageBgOf?.Invoke(territoryType) != null) return [];   // a swap stage has none of the donor's gimmicks
         if (zoneCache.TryGetValue(territoryType, out var cached)) return cached;
 
         var result = new List<MapEffectSlotInfo>();
@@ -174,7 +185,7 @@ public sealed unsafe class MapEffectService
 
             ResolveSgbPaths(territory.Value.Bg.ToString(), result);
             foreach (var s in result)
-                if (!string.IsNullOrEmpty(s.SgbPath)) s.States = ReadStateMappings(s.SgbPath);
+                if (!string.IsNullOrEmpty(s.SgbPath)) (s.States, s.AutoPlayStates) = ReadStateMappings(s.SgbPath);
         }
         catch (Exception ex)
         {
@@ -184,16 +195,17 @@ public sealed unsafe class MapEffectService
     }
 
     // ── Festivals (adapted from Hyperborea Utils.GetZoneFestivals / ApplyFestivals) ───────────────────────────────
-    private readonly Dictionary<uint, List<(int Id, List<int> Phases)>> festivalCache = [];
+    private readonly Dictionary<string, List<(int Id, List<int> Phases)>> festivalCache = [];
 
     /// <summary>Festival ids (with their phase ids) whose layers exist in this level's bg/planevent LGBs.</summary>
     public List<(int Id, List<int> Phases)> GetZoneFestivals(uint territoryType)
     {
-        if (festivalCache.TryGetValue(territoryType, out var cached)) return cached;
+        var cacheKey = SceneCacheKey(territoryType);
+        if (festivalCache.TryGetValue(cacheKey, out var cached)) return cached;
         var map = new SortedDictionary<int, SortedSet<int>>();
         try
         {
-            var bg = data.GetExcelSheet<TerritoryType>()?.GetRowOrDefault(territoryType)?.Bg.ToString();
+            var bg = SceneBg(territoryType);
             if (!string.IsNullOrEmpty(bg))
             {
                 var slash = bg.LastIndexOf('/');
@@ -219,7 +231,7 @@ public sealed unsafe class MapEffectService
         }
         var result = new List<(int, List<int>)>();
         foreach (var kv in map) result.Add((kv.Key, new List<int>(kv.Value)));
-        festivalCache[territoryType] = result;
+        festivalCache[cacheKey] = result;
         return result;
     }
 
@@ -269,16 +281,17 @@ public sealed unsafe class MapEffectService
     // ── Scene layers ──────────────────────────────────────────────────────────────────────────────────────────────
     // Many duties switch phase scenery by showing/hiding whole bg layers (FRU: n4gw_p2-3, n4gw_p4-5, n4gw_p6-7 ...),
     // driven by the server. A client-side load shows them all at once; these let the user toggle each layer by hand.
-    private readonly Dictionary<uint, List<SceneLayer>> layerCache = [];
+    private readonly Dictionary<string, List<SceneLayer>> layerCache = [];
 
     public List<SceneLayer> GetSceneLayers(uint territoryType)
     {
-        if (layerCache.TryGetValue(territoryType, out var cached)) return cached;
+        var cacheKey = SceneCacheKey(territoryType);
+        if (layerCache.TryGetValue(cacheKey, out var cached)) return cached;
         var result = new List<SceneLayer>();
-        layerCache[territoryType] = result;
+        layerCache[cacheKey] = result;
         try
         {
-            var bg = data.GetExcelSheet<TerritoryType>()?.GetRowOrDefault(territoryType)?.Bg.ToString();
+            var bg = SceneBg(territoryType);
             if (string.IsNullOrEmpty(bg)) return result;
             var slash = bg.LastIndexOf('/');
             var dir = slash >= 0 ? bg[..slash] : bg;
@@ -451,7 +464,7 @@ public sealed unsafe class MapEffectService
 
     /// <summary>
     /// The state every slot rests at when the duty starts (what the server's zone-in snapshot sets). Known duties use
-    /// captured data; otherwise each slot's "off"/"hide" state is used when its SGB names one.
+    /// captured data; every other duty uses PickOpeningState.
     /// </summary>
     public Dictionary<ushort, ushort> GetOpeningStates(uint territoryType)
     {
@@ -464,32 +477,46 @@ public sealed unsafe class MapEffectService
             return result;
         }
         foreach (var s in slots)
-        {
-            // Priority: an explicit default ("def", e.g. M11S f_def_on / m_def_off), then off/hide. "_a" variants are
-            // the animated transitions, never resting states.
-            ushort? pick = null;
-            foreach (var (state, name) in s.States)
-            {
-                var n = name.ToLowerInvariant();
-                if (n.EndsWith("_a")) continue;
-                if (n.Contains("_def") || n.StartsWith("def")) { pick = state; break; }
-            }
-            if (pick == null)
-                foreach (var (state, name) in s.States)
-                {
-                    var n = name.ToLowerInvariant();
-                    if (n.EndsWith("_a")) continue;
-                    if (n.EndsWith("off") || n.EndsWith("hide") || n.Contains("_off") || n.Contains("_hide")) { pick = state; break; }
-                }
-            if (pick.HasValue) result[s.Slot] = pick.Value;
-        }
+            if (PickOpeningState(s) is { } state) result[s.Slot] = state;
         return result;
+    }
+
+    // "x_def", "x_default", "x_def_on" name a default; "x_def2on" is the animation leaving it.
+    private static readonly System.Text.RegularExpressions.Regex DefaultStateName =
+        new(@"(^|_)def(ault)?(_on|_show)?$", System.Text.RegularExpressions.RegexOptions.IgnoreCase | System.Text.RegularExpressions.RegexOptions.Compiled);
+
+    private const ushort RestState = 4;
+
+    // An explicit default, else what the SGB autoplays, else state 4. Never choose by "off" / "hide" in the name: floors
+    // and set pieces are commonly 1 = stage_off / 4 = stage_on, so that removed the ground (1085 big_stg_on, 917
+    // btlstg_show, 1154 floor_u_on). A state the SGB lacks is never written.
+    private static ushort? PickOpeningState(MapEffectSlotInfo slot)
+    {
+        ushort? named = null;
+        bool hasRest = false;
+        foreach (var (state, name) in slot.States)
+        {
+            if (state == RestState) hasRest = true;
+            if (DefaultStateName.IsMatch(name) && (named == null || state == RestState)) named = state;
+        }
+        if (named != null) return named;
+        if (slot.AutoPlayStates.Length > 0)
+            return Array.IndexOf(slot.AutoPlayStates, RestState) >= 0 ? RestState : slot.AutoPlayStates[0];
+        return hasRest ? RestState : null;
+    }
+
+    /// <summary>Layers to hide as soon as the duty loads: those its first built-in flow phase hides.</summary>
+    public HashSet<uint> GetOpeningHiddenLayers(uint territoryType)
+    {
+        var presets = GetBuiltinPresets(territoryType);
+        return presets.Count > 0 && presets[0].IsFlow ? presets[0].Hidden : [];
     }
 
     private readonly Dictionary<uint, List<BuiltinPreset>> builtinCache = [];
 
     public List<BuiltinPreset> GetBuiltinPresets(uint territoryType)
     {
+        if (StageBgOf?.Invoke(territoryType) != null) return [];
         if (builtinCache.TryGetValue(territoryType, out var cached)) return cached;
         var result = new List<BuiltinPreset>();
         builtinCache[territoryType] = result;
@@ -498,11 +525,12 @@ public sealed unsafe class MapEffectService
             var zoneSlots = GetZoneSlots(territoryType);
             foreach (var ph in sgbFlow)
             {
-                var p = new BuiltinPreset { Name = ph.Name, Weather = ph.Weather, IsFlow = true };
+                var p = new BuiltinPreset { Name = ph.Name, Weather = ph.Weather, IsFlow = true, NativeWeather = ph.NativeWeather };
                 foreach (var (sgb, state) in ph.BySgb ?? new())
                     foreach (var s in zoneSlots)
                         if (s.SgbName.Equals(sgb, StringComparison.OrdinalIgnoreCase)) p.Effects[s.Slot] = state;
-                if (p.Effects.Count > 0) result.Add(p);
+                AddHiddenLayers(territoryType, ph, p);
+                if (p.Effects.Count > 0 || p.Hidden.Count > 0) result.Add(p);
             }
             return result;
         }
@@ -515,10 +543,7 @@ public sealed unsafe class MapEffectService
                 var p = new BuiltinPreset { Name = ph.Name, Weather = ph.Weather, IsFlow = true, NativeWeather = ph.NativeWeather };
                 foreach (var kv in opening) p.Effects[kv.Key] = kv.Value;
                 foreach (var kv in ph.Slots) p.Effects[kv.Key] = kv.Value;
-                if (ph.HideLayers != null)
-                    foreach (var l in GetSceneLayers(territoryType))
-                        foreach (var pre in ph.HideLayers)
-                            if (l.Name.StartsWith(pre, StringComparison.OrdinalIgnoreCase)) { p.Hidden.Add(l.Id); break; }
+                AddHiddenLayers(territoryType, ph, p);
                 result.Add(p);
             }
             return result;
@@ -546,6 +571,14 @@ public sealed unsafe class MapEffectService
         foreach (var kv in phaseOf) none.Hidden.Add(kv.Key);
         result.Add(none);
         return result;
+    }
+
+    private void AddHiddenLayers(uint territoryType, PhaseDef phase, BuiltinPreset preset)
+    {
+        if (phase.HideLayers == null) return;
+        foreach (var layer in GetSceneLayers(territoryType))
+            foreach (var prefix in phase.HideLayers)
+                if (layer.Name.StartsWith(prefix, StringComparison.OrdinalIgnoreCase)) { preset.Hidden.Add(layer.Id); break; }
     }
 
     // ── Layout versions (story progress) ─────────────────────────────────────────────────────────────────────────
@@ -602,15 +635,16 @@ public sealed unsafe class MapEffectService
         k.Title = head + (kinds.Count > 0 ? " · " + string.Join("、", kinds) : "");
     }
 
-    private readonly Dictionary<uint, List<LayoutKey>> layoutKeyCache = [];
+    private readonly Dictionary<string, List<LayoutKey>> layoutKeyCache = [];
 
     public List<LayoutKey> GetLayoutKeys(uint territoryType)
     {
-        if (layoutKeyCache.TryGetValue(territoryType, out var cached)) return cached;
+        var cacheKey = SceneCacheKey(territoryType);
+        if (layoutKeyCache.TryGetValue(cacheKey, out var cached)) return cached;
         var map = new SortedDictionary<uint, LayoutKey>();
         try
         {
-            var bg = data.GetExcelSheet<TerritoryType>()?.GetRowOrDefault(territoryType)?.Bg.ToString();
+            var bg = SceneBg(territoryType);
             if (!string.IsNullOrEmpty(bg))
             {
                 var slash = bg.LastIndexOf('/');
@@ -621,7 +655,7 @@ public sealed unsafe class MapEffectService
                     try { raw = data.GetFile<FileResource>($"bg/{dir}/{file}.lgb")?.Data; }
                     catch { continue; }
                     if (raw == null) continue;
-                    foreach (var (name, type, sets) in ReadLayerSets(raw))
+                    foreach (var (name, type, sets, _) in ReadLayerSets(raw))
                     {
                         if (type != 1 && type != 2) continue;   // 1 Include, 2 Exclude
                         foreach (var id in sets)
@@ -639,21 +673,89 @@ public sealed unsafe class MapEffectService
         {
             log.Error("[HMSync] [LAYOUTKEY] read failed for territory " + territoryType + ": " + ex.Message);
         }
+        // Only keys in the level's scene-filter table can be loaded: with any other key the game finds no filter and
+        // instantiates every variant on top of each other.
+        var sceneKeys = ReadSceneKeys(data, SceneBg(territoryType));
+        if (sceneKeys.Count > 0 && map.Count > 0)
+        {
+            foreach (var key in new List<uint>(map.Keys))
+                if (!sceneKeys.Contains(key)) map.Remove(key);
+            foreach (var key in sceneKeys)
+                if (!map.ContainsKey(key)) map[key] = new LayoutKey { Key = key };
+        }
         var result = new List<LayoutKey>(map.Values);
-        uint forced = ZoneLoadService.GetForcedCastKey(territoryType);
+        uint forced = StageBgOf?.Invoke(territoryType) != null ? 0 : ZoneLoadService.GetForcedCastKey(territoryType);
         foreach (var k in result) { NameLayoutKey(k); k.PluginDefault = k.Key == forced; }
         result.Sort((a, b) => a.Stage != b.Stage ? a.Stage.CompareTo(b.Stage) : a.Key.CompareTo(b.Key));
-        layoutKeyCache[territoryType] = result;
+        layoutKeyCache[cacheKey] = result;
         return result;
+    }
+
+    // Keys of the .lvb's FileSceneFilterList, in file order (layout: ClientStructs FileFormat.cs).
+    private static List<uint> ReadSceneKeys(IDataManager data, string? bg)
+    {
+        var keys = new List<uint>();
+        if (string.IsNullOrEmpty(bg)) return keys;
+        byte[]? b;
+        try { b = data.GetFile<FileResource>($"bg/{bg}.lvb")?.Data; }
+        catch { return keys; }
+        const int scene = 20, filterSize = 0x1C;
+        if (b == null || b.Length < scene + 0x10) return keys;
+        int offset = BitConverter.ToInt32(b, scene + 0x0C), list = scene + offset;
+        if (offset <= 0 || list + 8 > b.Length) return keys;
+        int entries = list + BitConverter.ToInt32(b, list), count = BitConverter.ToInt32(b, list + 4);
+        for (int i = 0; i < count; i++)
+        {
+            int at = entries + filterSize * i;
+            if (at < 0 || at + filterSize > b.Length) break;
+            uint key = BitConverter.ToUInt32(b, at + 4);
+            if (key != 0 && !keys.Contains(key)) keys.Add(key);
+        }
+        return keys;
+    }
+
+    /// <summary>
+    /// The layer-filter key to swap a cutscene stage in with. The donor's territory matches none of the stage's filters,
+    /// and the game then instantiates every variant at once. Picks the variant that keeps the most scenery, as the
+    /// first one can be nearly empty (Ship cabin: 1 of 9 objects). 0 = nothing overlaps (no filters, or one variant
+    /// already holds all the scenery): load as before.
+    /// </summary>
+    public static uint GetStageSceneKey(IDataManager data, string bg)
+    {
+        var keys = ReadSceneKeys(data, bg);
+        var slash = bg.LastIndexOf('/');
+        if (keys.Count == 0 || slash < 0) return 0;
+        var kept = new int[keys.Count];
+        int total = 0;
+        foreach (var file in new[] { "bg", "planmap", "vfx" })
+        {
+            byte[]? raw;
+            try { raw = data.GetFile<FileResource>($"bg/{bg[..slash]}/{file}.lgb")?.Data; }
+            catch { continue; }
+            if (raw == null) continue;
+            foreach (var (_, type, sets, scenery) in ReadLayerSets(raw))
+            {
+                total += scenery;
+                for (int i = 0; i < kept.Length; i++)
+                {
+                    bool listed = Array.IndexOf(sets, keys[i]) >= 0;
+                    if (type == 1 ? listed : type != 2 || !listed) kept[i] += scenery;
+                }
+            }
+        }
+        int best = 0;
+        for (int i = 1; i < kept.Length; i++)
+            if (kept[i] > kept[best]) best = i;
+        return kept[best] < total ? keys[best] : 0;
     }
 
     // Raw LGB layer-header walk (Lumina here exposes the set count only, not the ids). Layout, verified offline on
     // n4gw/r1fz/d2az: "LGB1" + "LGP1" chunk at 12; chunk body at 20 = {groupId, nameOff, layersOff, layerCount};
     // each layer: {u32 id, i32 nameOff, i32 instOff, i32 instCount, 4 bytes flags, i32 setListOff, ...};
     // set list at layer+setListOff = {i32 type, i32 setsOff, i32 count} then count x u32 ids at list+setsOff.
-    private static IEnumerable<(string Name, int Type, uint[] Sets)> ReadLayerSets(byte[] b)
+    private static IEnumerable<(string Name, int Type, uint[] Sets, int Scenery)> ReadLayerSets(byte[] b)
     {
-        var result = new List<(string, int, uint[])>();
+        var result = new List<(string, int, uint[], int)>();
         try
         {
             const int body = 20;
@@ -663,14 +765,28 @@ public sealed unsafe class MapEffectService
             for (int i = 0; i < count && i < 4096; i++)
             {
                 int ls = table + BitConverter.ToInt32(b, table + 4 * i);
-                if (ls < 0 || ls + 24 > b.Length) continue;
+                if (ls < 0 || ls + 26 > b.Length) continue;
                 int nameOff = BitConverter.ToInt32(b, ls + 4);
                 int setListOff = BitConverter.ToInt32(b, ls + 20);
                 string name = ReadCString(b, ls + nameOff);
                 int rl = ls + setListOff;
                 if (rl < 0 || rl + 12 > b.Length) continue;
                 int type = BitConverter.ToInt32(b, rl), setsOff = BitConverter.ToInt32(b, rl + 4), n = BitConverter.ToInt32(b, rl + 8);
-                if (n <= 0 || n > 64) { result.Add((name, type, Array.Empty<uint>())); continue; }
+                // Scenery = BgParts (1) and SharedGroups (6), festival layers excluded (they load only on demand).
+                int scenery = 0;
+                if (BitConverter.ToUInt16(b, ls + 24) == 0)
+                {
+                    int instances = ls + BitConverter.ToInt32(b, ls + 8), instanceCount = BitConverter.ToInt32(b, ls + 12);
+                    for (int k = 0; k < instanceCount; k++)
+                    {
+                        int slotAt = instances + 4 * k;
+                        if (slotAt < 0 || slotAt + 4 > b.Length) break;
+                        int at = instances + BitConverter.ToInt32(b, slotAt);
+                        if (at < 0 || at + 4 > b.Length) continue;
+                        if (BitConverter.ToInt32(b, at) is 1 or 6) scenery++;
+                    }
+                }
+                if (n <= 0 || n > 256) { result.Add((name, type, Array.Empty<uint>(), scenery)); continue; }
                 var sets = new uint[n];
                 for (int k = 0; k < n; k++)
                 {
@@ -678,7 +794,7 @@ public sealed unsafe class MapEffectService
                     if (at + 4 > b.Length) break;
                     sets[k] = BitConverter.ToUInt32(b, at);
                 }
-                result.Add((name, type, sets));
+                result.Add((name, type, sets, scenery));
             }
         }
         catch { /* malformed file: return what was read */ }
@@ -697,16 +813,17 @@ public sealed unsafe class MapEffectService
     // Every level's .lvb names its environment file (.envb); the envb's ENVS table lists every weather the zone can
     // render natively - including duty-only ones the WeatherRate never schedules (FRU's victory weather 1, DSR's
     // Oppression 44-47 / Dragonstorms 66/67/170, TEA's Beyond Time 71/72). Phase scenery is mostly driven by these.
-    private readonly Dictionary<uint, List<(byte Id, string Name)>> weatherCache = [];
+    private readonly Dictionary<string, List<(byte Id, string Name)>> weatherCache = [];
 
     public List<(byte Id, string Name)> GetZoneWeathers(uint territoryType)
     {
-        if (weatherCache.TryGetValue(territoryType, out var cached)) return cached;
+        var cacheKey = SceneCacheKey(territoryType);
+        if (weatherCache.TryGetValue(cacheKey, out var cached)) return cached;
         var result = new List<(byte, string)>();
-        weatherCache[territoryType] = result;
+        weatherCache[cacheKey] = result;
         try
         {
-            var bg = data.GetExcelSheet<TerritoryType>()?.GetRowOrDefault(territoryType)?.Bg.ToString();
+            var bg = SceneBg(territoryType);
             if (string.IsNullOrEmpty(bg)) return result;
             var lvb = data.GetFile<FileResource>($"bg/{bg}.lvb")?.Data;
             if (lvb == null) return result;
@@ -748,7 +865,7 @@ public sealed unsafe class MapEffectService
         return Encoding.ASCII.GetString(blob, start, hit + e.Length - start);
     }
 
-    private readonly Dictionary<uint, List<ZoneArea>> areaCache = [];
+    private readonly Dictionary<string, List<ZoneArea>> areaCache = [];
 
     /// <summary>
     /// Areas worth jumping to in this level, one point per LVD_* layer from planmap/planevent: boss arenas, event rooms
@@ -757,12 +874,13 @@ public sealed unsafe class MapEffectService
     /// </summary>
     public List<ZoneArea> GetZoneAreas(uint territoryType)
     {
-        if (areaCache.TryGetValue(territoryType, out var cached)) return cached;
+        var cacheKey = SceneCacheKey(territoryType);
+        if (areaCache.TryGetValue(cacheKey, out var cached)) return cached;
         var result = new List<ZoneArea>();
-        areaCache[territoryType] = result;
+        areaCache[cacheKey] = result;
         try
         {
-            var bg = data.GetExcelSheet<TerritoryType>()?.GetRowOrDefault(territoryType)?.Bg.ToString();
+            var bg = SceneBg(territoryType);
             if (string.IsNullOrEmpty(bg)) return result;
             var slash = bg.LastIndexOf('/');
             var dir = slash >= 0 ? bg[..slash] : bg;
@@ -891,45 +1009,49 @@ public sealed unsafe class MapEffectService
     }
 
     // Reads the SGB's state -> timeline name table (raw layout, same as Hyperborea; Lumina has no SgbFile yet).
-    private (ushort State, string Name)[] ReadStateMappings(string sgbPath)
+    private ((ushort State, string Name)[] States, ushort[] AutoPlay) ReadStateMappings(string sgbPath)
     {
         byte[]? bytes;
         try { bytes = data.GetFile<FileResource>(sgbPath)?.Data; }
-        catch { return []; }
-        if (bytes == null || bytes.Length < 60) return [];
+        catch { return ([], []); }
+        if (bytes == null || bytes.Length < 60) return ([], []);
 
         var offsetAnimHandlers = BitConverter.ToInt32(bytes, 52);
-        if (offsetAnimHandlers <= 0) return [];
+        if (offsetAnimHandlers <= 0) return ([], []);
         var configBase = 20 + offsetAnimHandlers;
-        if (configBase + 21 > bytes.Length) return [];
+        if (configBase + 21 > bytes.Length) return ([], []);
 
         var offsetTimelines = BitConverter.ToInt32(bytes, 36);
         var fileDataBase = 20 + offsetTimelines;
-        if (fileDataBase + 8 > bytes.Length) return [];
+        if (fileDataBase + 8 > bytes.Length) return ([], []);
 
         var entryOffset = BitConverter.ToInt32(bytes, fileDataBase);
         var count = BitConverter.ToInt32(bytes, fileDataBase + 4);
-        if (count <= 0 || count > 128) return [];
+        if (count <= 0 || count > 128) return ([], []);
 
+        const int timelineSize = 0x2C, autoPlayOffset = 0x20;   // FileSceneTimeline
         var tmlbNames = ExtractTmlbNames(bytes, count);
-        var subIdToName = new Dictionary<int, string>(count);
+        var timelines = new Dictionary<int, (string Name, bool AutoPlay)>(count);
         for (var n = 0; n < count; n++)
         {
-            var entryStart = fileDataBase + entryOffset + n * 44;
-            if (entryStart + 4 > bytes.Length) break;
+            var entryStart = fileDataBase + entryOffset + n * timelineSize;
+            if (entryStart + autoPlayOffset >= bytes.Length) break;
             var subId = BitConverter.ToInt32(bytes, entryStart);
-            if (subId > 0 && n < tmlbNames.Length) subIdToName.TryAdd(subId, tmlbNames[n]);
+            if (subId > 0 && n < tmlbNames.Length) timelines.TryAdd(subId, (tmlbNames[n], bytes[entryStart + autoPlayOffset] != 0));
         }
 
-        var result = new List<(ushort, string)>(16);
+        var states = new List<(ushort, string)>(16);
+        var autoPlay = new List<ushort>();
         for (var i = 0; i < 16; i++)
         {
             int subId = bytes[configBase + 5 + i];
             if (subId == 0) continue;
             var state = (ushort)(1 << i);
-            result.Add((state, subIdToName.TryGetValue(subId, out var n2) ? n2 : $"SubId={subId}"));
+            bool known = timelines.TryGetValue(subId, out var timeline);
+            states.Add((state, known ? timeline.Name : $"SubId={subId}"));
+            if (known && timeline.AutoPlay) autoPlay.Add(state);
         }
-        return [.. result];
+        return (states.ToArray(), autoPlay.ToArray());
     }
 
     private static string[] ExtractTmlbNames(byte[] bytes, int limit)

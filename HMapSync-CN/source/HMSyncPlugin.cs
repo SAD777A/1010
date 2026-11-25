@@ -333,6 +333,7 @@ public sealed class HMSyncPlugin : IDalamudPlugin
         // v0.7.360: the hide sweep must stand down during gpose - it was hiding the player's gpose COPY
         // (different object index than the live local player) and the mount inherited the hide.
         actorVisibility.IsGPosing = () => clientState.IsGPosing;
+        zoneLoad.IsGPosing = () => clientState.IsGPosing;
 
         // D-16.2/.3: when the packet filter passes a real walk-in's spawn through (inbound), it fires this on the NETWORK
         // thread. QueueImmediateHide only enqueues (thread-safe); ActorVisibility.Update drains it next frame so the
@@ -550,6 +551,7 @@ public sealed class HMSyncPlugin : IDalamudPlugin
         // Movement hooks stay inert during any zone load/revert (teardown window where zone
         // objects may be half-destroyed).
         noclip.TransitionGuard = () => zoneLoad.IsTransitioning;
+        mapEffects.StageBgOf = terr => zoneLoad.IsZoneLoaded && terr == zoneLoad.CurrentLoadedZone ? zoneLoad.ActiveStageBg : null;
         noclip.SpeedMultiplier = () => config.NoclipSpeedMultiplier;
         noclip.BoostAllowed = () => zoneLoad.IsZoneLoaded && packetFilter.IsActive;
         carpet.TransitionGuard = () => zoneLoad.IsTransitioning;
@@ -679,6 +681,8 @@ public sealed class HMSyncPlugin : IDalamudPlugin
             GetZoneWeathers = terr => mapEffects.GetZoneWeathers(terr),
             GetLayoutKeys = terr => mapEffects.GetLayoutKeys(terr),
             CurrentLayoutKey = () => zoneLoad.CurrentLoadedZone == lastKeyZone ? LastLayoutKey : 0,
+            LoadGeneration = () => zoneLoad.LoadGeneration,
+            InSwapStage = () => zoneLoad.ActiveStageBg != null,
             LoadLayoutKey = (terr, key) => RunOnMainThread(() => LoadWithLayoutKey(terr, key)),
             ActiveWeather = () => mapSettings.GetActiveWeather(),
             ApplyEnvWeather = id => RunOnMainThread(() =>
@@ -690,7 +694,7 @@ public sealed class HMSyncPlugin : IDalamudPlugin
                     chat.Print("[HMSync] 天气 " + id + " 写入被拒绝（不在当前天气库）。");
             }),
             GetBuiltinPresets = terr => mapEffects.GetBuiltinPresets(terr),
-            SetSceneLayerHidden = (layer, hide) => RunOnMainThread(() => HideIdSet(layer.InstanceIds, hide, "LAYER " + layer.Name)),
+            SetSceneLayerHidden = (layer, hide) => RunOnMainThread(() => zoneLoad.ApplyIdSet(layer.InstanceIds, hide, "LAYER " + layer.Name)),
             EnsureMapEffectSnapshot = terr => mapEffects.EnsureInitialSnapshot(terr),
             HasMapEffectSnapshot = terr => mapEffects.HasSnapshot(terr) || mapEffects.GetOpeningStates(terr).Count > 0,
             ResetMapEffects = terr => RunOnMainThread(() =>
@@ -1256,22 +1260,17 @@ public sealed class HMSyncPlugin : IDalamudPlugin
     private uint meHideZone;
     private int meHideDelay;
     private readonly HashSet<uint> meHidden = new();
-    private readonly HashSet<uint> ownHeldKeys = new();   // keys hidden by map-effect / scene-layer UI in the current zone
-
-    private void HideIdSet(HashSet<uint> ids, bool hide, string tag)
-    {
-        zoneLoad.ApplyIdSet(ids, hide, tag);
-        if (hide) ownHeldKeys.UnionWith(ids); else ownHeldKeys.ExceptWith(ids);
-    }
+    private uint meLoadGeneration;
 
     private void TickMapEffectObjectHide()
     {
         uint zone = zoneLoad.IsZoneLoaded && !zoneLoad.IsTransitioning ? zoneLoad.CurrentLoadedZone : 0;
-        if (zone != meHideZone)
+        // IsTransitioning falls back within the loading frame, so reloads and stage hops are seen by the generation.
+        if (zone != meHideZone || zoneLoad.LoadGeneration != meLoadGeneration)
         {
-            // The previous zone's instances are gone: just drop our per-frame holds instead of a SHOW that matches nothing.
-            meHidden.Clear();
-            if (ownHeldKeys.Count > 0) { zoneLoad.ReleaseHeldKeys(ownHeldKeys); ownHeldKeys.Clear(); }
+            meHidden.Clear();   // LoadZone already dropped the holds
+            mapEffects.InvalidateSnapshot();
+            meLoadGeneration = zoneLoad.LoadGeneration;
             meHideZone = zone;
             meHideDelay = zone != 0 ? 60 : 0;   // ~1s for the layout to stream in
             meOpeningPending = zone != 0 && config.EnableMapEffects;
@@ -1295,7 +1294,10 @@ public sealed class HMSyncPlugin : IDalamudPlugin
         }
         if (meHideDelay <= 0) return;
         if (--meHideDelay > 0) return;
-        if (zone == 0 || !config.HideMapEffectObjects) return;
+        if (zone == 0) return;
+        var openingHidden = mapEffects.GetOpeningHiddenLayers(zone);
+        if (openingHidden.Count > 0) ui.HideOpeningLayers(zone, openingHidden);   // stacked phase arenas (TEA)
+        if (!config.HideMapEffectObjects) return;
         SetMapEffectObjectsHidden(zone, true);
     }
 
@@ -1308,11 +1310,16 @@ public sealed class HMSyncPlugin : IDalamudPlugin
     public uint LastLayoutKey { get; private set; }
     private uint lastKeyZone;
 
+    private string? keyedStageBg;   // the swap stage to bring back after the hop
+    private uint keyedDressing;
+
     private void LoadWithLayoutKey(uint territory, uint key)
     {
         if (zoneLoad.CurrentLoadedZone == territory)
         {
             keyedTarget = territory; keyedKey = key; keyedDelay = 45;
+            keyedStageBg = zoneLoad.ActiveStageBg;
+            keyedDressing = dressing.ActiveRow;
             chat.Print("[HMSync] 切换布局版本：先经过旅馆再冷加载地图…");
             DoQuickLoad(LayoutHopZone);
             return;
@@ -1320,13 +1327,26 @@ public sealed class HMSyncPlugin : IDalamudPlugin
         ArmKeyAndLoad(territory, key);
     }
 
-    private void ArmKeyAndLoad(uint territory, uint key)
+    private void ArmKeyAndLoad(uint territory, uint key, string? stageBg = null, uint dressingRow = 0)
     {
-        if (key != 0) zoneLoad.PendingCastKeyOverride = key;
-        log.Information("[HMSync] [LAYOUTKEY] loading " + territory + " with layout key " + (key == 0 ? "default" : key.ToString()));
+        if (stageBg != null)
+        {
+            zoneLoad.ActiveStageBg = stageBg;
+            zoneLoad.PendingStageBg = stageBg;
+            zoneLoad.PendingStageKey = key != 0 ? key : null;
+            dressing.Arm(dressingRow);
+        }
+        else if (key != 0) zoneLoad.PendingCastKeyOverride = key;
+        log.Information("[HMSync] [LAYOUTKEY] loading " + (stageBg ?? territory.ToString()) + " with layout key " + (key == 0 ? "default" : key.ToString()));
         DoQuickLoad(territory);
-        // LoadZone consumes the key synchronously. A load that aborted before LoadZone must not leave it for the next map.
+        // LoadZone consumes these synchronously. A load that aborted before LoadZone must not leave them for the next map.
         zoneLoad.PendingCastKeyOverride = null;
+        if (stageBg != null)
+        {
+            zoneLoad.PendingStageBg = null;
+            zoneLoad.PendingStageKey = null;
+            dressing.Disarm();
+        }
         if (zoneLoad.CurrentLoadedZone != territory) return;
         LastLayoutKey = key;
         lastKeyZone = territory;
@@ -1343,7 +1363,7 @@ public sealed class HMSyncPlugin : IDalamudPlugin
         }
         if (--keyedDelay > 0) return;
         keyedDelay = -1;
-        ArmKeyAndLoad(keyedTarget, keyedKey);
+        ArmKeyAndLoad(keyedTarget, keyedKey, keyedStageBg, keyedDressing);
     }
 
     private bool meOpeningPending;
@@ -1353,7 +1373,7 @@ public sealed class HMSyncPlugin : IDalamudPlugin
     {
         var ids = mapEffects.GetSlotInstanceIds(zone);
         if (ids.Count == 0) return;
-        HideIdSet(ids, hide, "MEOBJ");
+        zoneLoad.ApplyIdSet(ids, hide, "MEOBJ");
         if (hide) meHidden.UnionWith(ids); else meHidden.ExceptWith(ids);
     }
 
@@ -1363,7 +1383,7 @@ public sealed class HMSyncPlugin : IDalamudPlugin
         {
             if (s.Slot != slot || s.LayoutId == 0) continue;
             if (!meHidden.Remove(s.LayoutId)) return;
-            HideIdSet(new HashSet<uint> { s.LayoutId }, false, "MEOBJ");
+            zoneLoad.ApplyIdSet(new HashSet<uint> { s.LayoutId }, false, "MEOBJ");
             return;
         }
     }

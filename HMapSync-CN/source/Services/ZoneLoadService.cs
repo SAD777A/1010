@@ -94,6 +94,9 @@ public unsafe class ZoneLoadService : IDisposable
     // territoryId arg (geometry still streams from territoryPath). Consume-once. Dual use: (a) the /hms casttest debug
     // harness arms it manually; (b) NB-18-SHIP arms it from ForcedCastKeys inside LoadZone (see below).
     public uint? PendingCastKeyOverride;
+    // CN port: a layout version picked by hand for the cutscene stage being swapped in (consume-once).
+    public uint? PendingStageKey;
+    private bool stageKeyChosen;
 
     // NB-18-SHIP (2026-08-02): per-zone forced layer-filter key for HMS virtual loads. The b10 retest CONFIRMED the
     // layer key drives layer-filtered LAYOUT/geometry (e.g. Terncliff 919's war-memorial cenotaph) independent of quest
@@ -133,6 +136,7 @@ public unsafe class ZoneLoadService : IDisposable
     {
         uint effTT = territoryId;
         uint effKey = layerFilterKey;
+        stageKeyChosen = false;
         if (PendingCastKeyOverride.HasValue)
         {
             effKey = PendingCastKeyOverride.Value;
@@ -144,10 +148,18 @@ public unsafe class ZoneLoadService : IDisposable
         if (!string.IsNullOrEmpty(PendingStageBg))
         {
             var stageBg = PendingStageBg!;
-            PendingStageBg = null;   // consume-once - keep origin's territoryId/layerFilterKey so layer resolution stays sane
+            PendingStageBg = null;   // consume-once
             cutsceneSceneActive = true;
-            log.Information("[CSS] CreateScene swap: " + territoryPath + " -> " + stageBg + " (terr=" + territoryId + " lfk=" + layerFilterKey + ")");
-            return createSceneHook!.Original(stageBg, territoryId, p3, layerFilterKey, festivals, p6, cfcId);
+            // CN port: the donor's territory is in none of the stage's filters, so the game would load every layer
+            // variant at once. Venues with a hand-tuned StageHideStates pair were authored on that composite: keep it.
+            stageKeyChosen = PendingStageKey.HasValue;
+            uint stageKey = PendingStageKey
+                ?? (StageHideStates.ContainsKey(stageBg) ? 0 : MapEffectService.GetStageSceneKey(dataManager, stageBg));
+            PendingStageKey = null;
+            uint stageTT = stageKey != 0 ? 0 : territoryId;   // FindFilter consults the key only when TT==0
+            uint stageFilter = stageKey != 0 ? stageKey : layerFilterKey;
+            log.Information("[CSS] CreateScene swap: " + territoryPath + " -> " + stageBg + " (terr=" + stageTT + " lfk=" + stageFilter + ")");
+            return createSceneHook!.Original(stageBg, stageTT, p3, stageFilter, festivals, p6, cfcId);
         }
         cutsceneSceneActive = false;   // a real, un-swapped scene is now live (incl. the return reload)
         return createSceneHook!.Original(territoryPath, effTT, p3, effKey, festivals, p6, cfcId);
@@ -277,6 +289,12 @@ public unsafe class ZoneLoadService : IDisposable
     // stays true through most of Revert's teardown.
     public bool IsTransitioning { get; private set; }
     public uint CurrentLoadedZone { get; private set; }
+    // CN port: +1 per virtual load. Reloads and stage hops keep the territory id, so that id alone can't detect them.
+    public uint LoadGeneration { get; private set; }
+    // CN port: Brio and similar tools spawn housing furniture models (bgcommon/hou/) while gposing. The de-draw used
+    // to take them for the origin home's leaked furniture and hid them within half a second.
+    public Func<bool>? IsGPosing;
+    private readonly HashSet<nint> deDrawnRoots = new();   // instances the de-draw took on outside gpose, this load
 
     // S262: development/research mode (off by default, toggled at runtime via /hms debug - NO
     // recompile needed). When ON, LoadZone sets up the InstanceContentDirector (SetupInstanceContentForZone)
@@ -914,6 +932,7 @@ public unsafe class ZoneLoadService : IDisposable
         hiddenInstanceKeys.Clear();
         colliderSavedState.Clear();
         untargetedObjects.Clear();
+        deDrawnRoots.Clear();
 
         deferredDeDrawFrames = 600;          // ~10s initial high-frequency window (waves can be slow)
         deferredDeDrawFiredOnce = false;
@@ -3372,11 +3391,14 @@ public unsafe class ZoneLoadService : IDisposable
                 heldHideArmed = true;
                 framework.Update += PollHeldHide;
             }
-            if (!hide && heldHideKeys.Count == 0 && heldHideArmed)
+            // Stage-state criteria and SG-child hides share the poll, so it outlives an empty key set.
+            if (!hide && heldHideKeys.Count == 0 && heldHideAssets.Count == 0 && heldHideIdRanges.Count == 0
+                && heldSgChildren.Count == 0 && heldHideArmed)
             {
                 heldHideArmed = false;
                 framework.Update -= PollHeldHide;
             }
+            if (!hide) RestoreColliders(want);
 
             log.Information("[HMSync] [" + tag + "] " + verb + " terr=" + CurrentLoadedZone + ": asked=" + want.Count
                 + " matched=" + matched + " slotsActed=" + slotsActed + (hide ? " sgChildren=" + sgChildren : "")
@@ -3599,19 +3621,6 @@ public unsafe class ZoneLoadService : IDisposable
 
     // Called by /hms stop teardown: disarm the per-frame hold + clear the set (visibility restore rides the existing
     // hiddenInstanceKeys restore sweep).
-    // CN port: drop per-frame holds for InstanceKeys whose zone was unloaded, without walking the layout (the
-    // instances are gone, so ApplyIdSet's show path would match nothing and leave the keys held forever).
-    public void ReleaseHeldKeys(IEnumerable<uint> keys)
-    {
-        heldHideKeys.ExceptWith(keys);
-        if (heldHideKeys.Count == 0 && heldHideAssets.Count == 0 && heldHideIdRanges.Count == 0 && heldSgChildren.Count == 0
-            && heldHideArmed)
-        {
-            heldHideArmed = false;
-            framework.Update -= PollHeldHide;
-        }
-    }
-
     public void ClearHeldHide()
     {
         heldHideKeys.Clear();
@@ -4635,6 +4644,8 @@ public unsafe class ZoneLoadService : IDisposable
     {
         if (layout == null) { log.Debug("[HMSync] Furniture: " + label + "Layout null"); return 0; }
         int hidden = 0;
+        // In gpose only keep up what was already hidden: anything new is a pose tool's spawn, not leaked furniture.
+        bool knownOnly = IsGPosing?.Invoke() == true;
         try
         {
             // v0.7.421 - IndoorObject (76) + OutdoorObject (77) added. Runtime-placed furniture
@@ -4657,6 +4668,7 @@ public unsafe class ZoneLoadService : IDisposable
                 {
                     var inst = kv.Item2.Value;
                     if (inst == null) continue;
+                    if (knownOnly && !deDrawnRoots.Contains((nint)inst)) continue;
 
                     // Only the DISPLAYED map's GlobalLayout hides event-map furniture via
                     // HavePrimary. ALL other layouts (Active + every other LoadedLayouts member,
@@ -4705,7 +4717,10 @@ public unsafe class ZoneLoadService : IDisposable
                         hidden += HideSharedGroupChildren((SharedGroupLayoutInstance*)inst, 0);
 
                     if (hideThis || isHousingAsset)
+                    {
                         hiddenInstanceKeys.Add(inst->Id.InstanceKey);
+                        deDrawnRoots.Add((nint)inst);
+                    }
                 }
             }
 
@@ -4728,6 +4743,8 @@ public unsafe class ZoneLoadService : IDisposable
                         var inst = ikv.Item2.Value;
                         if (inst == null) continue;
                         if (!IsHousingPath(inst->GetPrimaryPath())) continue;
+                        if (knownOnly && !deDrawnRoots.Contains((nint)inst)) continue;
+                        deDrawnRoots.Add((nint)inst);
                         housingIdCensus.Add(label + "/layer#" + (ulong)inst->Id.InstanceKey + "@" + (nint)inst);
                         // S178 DIAG: tag layer-walk resolution so we can see whether the RENDERING
                         // instances (e.g. 134's 1706672314928, which IS in this layer census but
@@ -5590,6 +5607,26 @@ public unsafe class ZoneLoadService : IDisposable
         RemoveRoadClones();   // v0.7.353: drop the 1345 road-mesh clones on stop
     }
 
+    // CN port: the deferred de-draw zeroes the colliders of hidden instances; showing one again must give its floor back.
+    private void RestoreColliders(HashSet<uint> keys)
+    {
+        if (colliderSavedState.Count == 0) return;
+        var fw = FFXIVClientStructs.FFXIV.Client.System.Framework.Framework.Instance();
+        var bgModule = fw != null ? fw->BGCollisionModule : null;
+        var sceneMgr = bgModule != null ? bgModule->SceneManager : null;
+        var sceneWrapper = sceneMgr != null ? sceneMgr->FirstScene : null;
+        var scene = sceneWrapper != null ? sceneWrapper->Scene : null;
+        if (scene == null) return;
+        foreach (var col in scene->Colliders)
+        {
+            uint ownerKey = (uint)(col->LayoutObjectId & 0xFFFFFFFF);
+            if (!keys.Contains(ownerKey) || !colliderSavedState.TryGetValue(ownerKey, out var saved)) continue;
+            col->VisibilityFlags = saved.vf;
+            col->LayerMask = saved.layerMask;
+        }
+        foreach (var key in keys) colliderSavedState.Remove(key);
+    }
+
     private int KillHiddenColliders()
     {
         int colHit = 0;
@@ -5903,9 +5940,12 @@ public unsafe class ZoneLoadService : IDisposable
         // criteria first so a prior venue's spec can't leak across a stage→stage hop, then load THIS venue's spec (if any).
         // The heldHide poll discovers + holds the redundant-state instances as the swapped bg streams in. ActiveStageBg is
         // set by LoadStage before this call; a plain zone leaves it null → cleared, no hide.
-        heldHideAssets.Clear();
-        heldHideIdRanges.Clear();
-        ApplyStageHide(ActiveStageBg ?? TerritoryBg(territoryId));   // b300: a plain load keys by its own bg (trial arenas)
+        // CN port: the poll promotes matches into heldHideKeys, so the whole hold has to go, not just the criteria
+        // (431 promoted keys used to ride along into every later map).
+        ClearHeldHide();
+        appliedSgChildren.Clear();
+        // A hand-picked layout version already holds one variant; its paired hides would take that variant's floor away.
+        ApplyStageHide(stageKeyChosen ? null : ActiveStageBg ?? TerritoryBg(territoryId));   // b300: a plain load keys by its own bg (trial arenas)
 
         // v0.7.263: 1345 wreck-de-draw PURGED. The Meddle-era hand-picked wreck-hiding is gone; 1345 now
         // loads with native geometry (wrecks present, all collision intact). Cleaner identity-based suppression
@@ -5977,6 +6017,7 @@ public unsafe class ZoneLoadService : IDisposable
 
         IsZoneLoaded = true;
         CurrentLoadedZone = territoryId;
+        LoadGeneration++;
         log.Information("[HMSync] Loaded zone " + territoryId + " at (" +
             spawn.X.ToString("F1") + ", " + spawn.Y.ToString("F1") + ", " + spawn.Z.ToString("F1") + ")");
 

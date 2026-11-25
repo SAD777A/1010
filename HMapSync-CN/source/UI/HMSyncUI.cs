@@ -274,7 +274,9 @@ public class HMSyncUI
     public Func<int>? MapEffectObjectsHiddenCount;
     public Func<uint, List<MapEffectService.BuiltinPreset>>? GetBuiltinPresets;
     public Action<SceneLayer, bool>? SetSceneLayerHidden;            // layer, hide
-    private uint hiddenLayersZone;
+    private uint hiddenLayersGeneration;
+    public Func<uint>? LoadGeneration;
+    public Func<bool>? InSwapStage;
     private readonly Dictionary<uint, SceneLayer> hiddenLayers = new();
     private string layerFilter = "";
     public Action<uint>? EnsureMapEffectSnapshot;
@@ -2144,6 +2146,7 @@ public class HMSyncUI
 
         uint loadedZone = CurrentLoadedZone?.Invoke() ?? 0;
         if (loadedZone == 0) { ImGui.TextDisabled("先加载一张地图。"); return; }
+        SyncHiddenLayers();
 
         // Area jump: boss arenas, event / ending rooms (e.g. a deep dungeon's floor 100), phase arenas - read from the
         // level's LGB layers, so hidden rooms far below/above the spawn are one click away.
@@ -2168,7 +2171,7 @@ public class HMSyncUI
 
         DrawEnvWeathers(loadedZone);
         DrawLayoutKeys(loadedZone);
-        DrawPhasePresets(loadedZone);
+        if (!(InSwapStage?.Invoke() ?? false)) DrawPhasePresets(loadedZone);   // presets are stored per territory, a stage only borrows one
         DrawFestivals(loadedZone);
         DrawSceneLayers(loadedZone);
 
@@ -2361,7 +2364,8 @@ public class HMSyncUI
         ImGui.TextDisabled("剧情进度 / 布局版本（" + keys.Count + "）");
         string Label(MapEffectService.LayoutKey k) => k.Title + (k.PluginDefault ? "（插件默认）" : "");
         var forced = keys.Find(k => k.PluginDefault);
-        string defLabel = forced != null ? "默认（插件固定为 " + forced.Title + "）" : "默认（游戏原本的版本）";
+        string defLabel = forced != null ? "默认（插件固定为 " + forced.Title + "）"
+            : (InSwapStage?.Invoke() ?? false) ? "默认（插件自动选择）" : "默认（游戏原本的版本）";
         var curKey = keys.Find(k => k.Key == cur);
         ImGui.SetNextItemWidth(-PanelPad);
         if (ImGui.BeginCombo("##layoutkey", cur == 0 || curKey == null ? defLabel : Label(curKey)))
@@ -2385,12 +2389,6 @@ public class HMSyncUI
     // reproduces a given phase. Hidden state is local and dropped when another map loads.
     private void DrawSceneLayers(uint zone)
     {
-        if (hiddenLayersZone != zone)
-        {
-            foreach (var l in hiddenLayers.Values) SetSceneLayerHidden?.Invoke(l, false);   // release the per-frame hold
-            hiddenLayers.Clear();
-            hiddenLayersZone = zone;
-        }
         var layers = GetSceneLayers?.Invoke(zone);
         if (layers == null || layers.Count == 0) return;
 
@@ -2426,6 +2424,7 @@ public class HMSyncUI
     // Brings the scene-layer visibility in line with a preset: shows layers it doesn't hide, hides the ones it does.
     private void ApplyPresetLayers(uint zone, MapPhasePreset p)
     {
+        SyncHiddenLayers();
         var layers = GetSceneLayers?.Invoke(zone);
         if (layers == null) return;
         var want = new HashSet<uint>(p.HiddenLayers);
@@ -2437,8 +2436,20 @@ public class HMSyncUI
         var force = new HashSet<uint>(p.ForceShownLayers);
         foreach (var l in layers)
             if (force.Contains(l.Id) && !want.Contains(l.Id)) SetSceneLayerHidden?.Invoke(l, false);
-        hiddenLayersZone = zone;
     }
+
+    // A new load starts with every layer shown and LoadZone has dropped the holds: only forget the old map's check marks.
+    private void SyncHiddenLayers()
+    {
+        uint generation = LoadGeneration?.Invoke() ?? 0;
+        if (generation == hiddenLayersGeneration) return;
+        hiddenLayers.Clear();
+        hiddenLayersGeneration = generation;
+    }
+
+    /// <summary>Hides a duty's later-phase layers right after it loads, keeping the layer list's check marks in step.</summary>
+    public void HideOpeningLayers(uint zone, HashSet<uint> layerIds) =>
+        ApplyPresetLayers(zone, new MapPhasePreset { HiddenLayers = new List<uint>(layerIds) });
 
     // CN port: festival decoration toggles (Hyperborea feature). Lists the festivals whose layers exist in this level;
     // each combo picks Off or a phase, applied to the live layout immediately. Local only; reloading the map resets.
