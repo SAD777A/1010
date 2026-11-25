@@ -129,6 +129,7 @@ public sealed class HMSyncPlugin : IDalamudPlugin
         config.MigrateRecentZones();   // v0.7.231: forward-migrate legacy RecentZones → RecentPlaces (idempotent)
         config.MigrateRelayKeys();     // v0.7.248: split baked-in ?k= keys into the Key field (fixes stale-master-key bug)
         config.Initialize(pluginInterface);
+        config.MigrateMapEffectsDefault();   // CN port: map effects on by default (needs Initialize for Save)
         config.EnsureRelayServicesSeeded();   // S328am: populate built-in relay services on first run
         config.EnforceRelayServiceForMode(config.ShowDebugCommands);   // v0.7.338: keep non-debug users off the localhost dev endpoint
 
@@ -1449,7 +1450,9 @@ public sealed class HMSyncPlugin : IDalamudPlugin
         if (preset.Festivals.Count > 0)
             mapEffects.SetFestivals(preset.Festivals.ConvertAll(f => (f.Id, f.Phase)));
         chat.Print("[HMSync] 已应用阶段预设“" + preset.Name + "”" +
-                   (preset.Effects.Count > 0 && applied == 0 ? "（副本控制器未就绪，机关未切换）" : "") + "。");
+                   (preset.Effects.Count > 0 && applied == 0
+                       ? (config.EnableMapEffects ? "（副本控制器未就绪，机关未切换）" : "（未开启“加载副本时启用场地机关”，机关未切换）")
+                       : "") + "。");
     }
 
     // Lets the GUI buttons run any /hms subcommand. Routes through the same dispatch as the

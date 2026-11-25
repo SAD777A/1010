@@ -10,8 +10,20 @@ public class HMSyncConfig : IPluginConfiguration
     public float NoclipSpeedMultiplier { get; set; } = 1f;   // CN port: 1..NoclipService.MaxSpeedMultiplier
     public string RelayUrl { get; set; } = "ws://localhost:9420";
 
-    // CN port: create the duty director on load so the map-effect panel can switch arena states.
-    public bool EnableMapEffects { get; set; } = false;
+    // CN port: create the duty director on load so the map-effect panel can switch arena states. Without it no opening
+    // state is applied and every gimmick shows its default look (hourglasses, orbs, walls...), so it is on by default.
+    public bool EnableMapEffects { get; set; } = true;
+    public bool MapEffectsDefaultMigrated { get; set; } = false;
+
+    // 1.1.2.0 and earlier defaulted EnableMapEffects to off, which left gimmicks showing on every fresh install. Turn it
+    // on once; a later choice to switch it off is kept.
+    public void MigrateMapEffectsDefault()
+    {
+        if (MapEffectsDefaultMigrated) return;
+        EnableMapEffects = true;
+        MapEffectsDefaultMigrated = true;
+        Save();
+    }
 
     // CN port: Hyperborea-style phase presets, per territory. Each preset is a named snapshot of map-effect slot
     // states + weather + festivals that can be re-applied in one click.

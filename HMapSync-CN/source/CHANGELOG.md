@@ -5,6 +5,13 @@ All notable changes to HMapSync (HMS) are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.3.0] - 2026-11-25 (HMapSync-CN, in development)
+
+### Changed
+
+- **Map effects are on by default.** With "enable map effects when loading a duty" off, no duty director is created and no opening state is applied, so every gimmick showed its default look on fresh installs. Existing configs are switched on once; turning it off again is kept. Side effect: the duty info panel appears while a duty map is loaded.
+- Applying a preset with map effects off now says so instead of "director not ready".
+
 ## [1.1.2.0] - 2026-11-25 (HMapSync-CN, in development)
 
 ### Fixed
